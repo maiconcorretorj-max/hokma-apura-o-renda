@@ -1,12 +1,12 @@
 'use client';
 
-// OCR com Web Workers DEDICADOS em threads separados
-// Processamento 100% paralelo sem travar a UI
+// OCR otimizado com Tesseract.js
+// Workers internos do Tesseract rodam em threads separados
 
-// Detecta número de núcleos da CPU (mínimo 4, máximo 8)
+// Detecta número de núcleos da CPU (mínimo 2, máximo 6)
 const MAX_WORKERS = typeof navigator !== 'undefined'
-  ? Math.min(Math.max(navigator.hardwareConcurrency || 4, 4), 8)
-  : 6;
+  ? Math.min(Math.max(navigator.hardwareConcurrency || 2, 2), 6)
+  : 4;
 
 export interface OcrProgressCallback {
   (progresso: {
@@ -16,53 +16,6 @@ export interface OcrProgressCallback {
     fase: string;
     paginaAtual?: number;
   }): void;
-}
-
-// Wrapper para Worker dedicado
-class TesseractWorker {
-  private worker: Worker;
-  private ready = false;
-  private messageQueue: Array<(value: any) => void> = [];
-
-  constructor() {
-    this.worker = new Worker('/tesseract.worker.js');
-    this.worker.onmessage = (e) => {
-      const resolver = this.messageQueue.shift();
-      if (resolver) resolver(e.data);
-    };
-  }
-
-  async init(): Promise<void> {
-    this.worker.postMessage({ type: 'init' });
-    const response = await this.waitForMessage();
-    if (response.type === 'ready') {
-      this.ready = true;
-    }
-  }
-
-  async recognize(imageData: ImageData, pageNum: number): Promise<string> {
-    if (!this.ready) throw new Error('Worker não inicializado');
-
-    this.worker.postMessage({ type: 'recognize', imageData, pageNum });
-    const response = await this.waitForMessage();
-
-    if (response.type === 'result') {
-      return response.text;
-    }
-    throw new Error(response.error || 'Erro no OCR');
-  }
-
-  async terminate(): Promise<void> {
-    this.worker.postMessage({ type: 'terminate' });
-    await this.waitForMessage();
-    this.worker.terminate();
-  }
-
-  private waitForMessage(): Promise<any> {
-    return new Promise((resolve) => {
-      this.messageQueue.push(resolve);
-    });
-  }
 }
 
 export async function executarOcr(
@@ -82,14 +35,35 @@ export async function executarOcr(
     atual: 0,
     total: numPages,
     percentual: 5,
-    fase: `Renderizando ${numPages} página(s)...`,
+    fase: `Preparando ${numPages} página(s) para OCR...`,
     paginaAtual: 0,
   });
 
-  // Renderizar todas as páginas primeiro (rápido)
-  const canvases: Array<{ pageNum: number; imageData: ImageData }> = [];
-  for (let i = 1; i <= numPages; i++) {
-    const page = await pdf.getPage(i);
+  // Criar workers Tesseract (já rodam em threads separados internamente)
+  const { createWorker } = await import('tesseract.js');
+  const numWorkers = Math.min(MAX_WORKERS, numPages);
+
+  onProgress?.({
+    atual: 0,
+    total: numPages,
+    percentual: 10,
+    fase: `Inicializando ${numWorkers} worker(s) Tesseract...`,
+    paginaAtual: 0,
+  });
+
+  const workers = await Promise.all(
+    Array.from({ length: numWorkers }, async () => {
+      const worker = await createWorker('por', 1);
+      return worker;
+    })
+  );
+
+  const resultados: string[] = new Array(numPages).fill('');
+  let paginasProcessadas = 0;
+
+  // Processar uma página
+  const processarPagina = async (pageNum: number, workerIndex: number) => {
+    const page = await pdf.getPage(pageNum);
     const viewport = page.getViewport({ scale: 1.5 });
 
     const canvas = document.createElement('canvas');
@@ -98,72 +72,34 @@ export async function executarOcr(
     const ctx = canvas.getContext('2d')!;
 
     await page.render({ canvasContext: ctx, viewport }).promise;
-    canvases.push({
-      pageNum: i,
-      imageData: ctx.getImageData(0, 0, canvas.width, canvas.height),
-    });
 
-    onProgress?.({
-      atual: i,
-      total: numPages,
-      percentual: 5 + Math.round((i / numPages) * 10),
-      fase: `Renderizando página ${i}/${numPages}...`,
-      paginaAtual: i,
-    });
-  }
-
-  onProgress?.({
-    atual: 0,
-    total: numPages,
-    percentual: 15,
-    fase: 'Iniciando Web Workers dedicados...',
-    paginaAtual: 0,
-  });
-
-  // Criar workers dedicados
-  const numWorkers = Math.min(MAX_WORKERS, numPages);
-  const workers: TesseractWorker[] = [];
-  for (let i = 0; i < numWorkers; i++) {
-    const w = new TesseractWorker();
-    await w.init();
-    workers.push(w);
-  }
-
-  const resultados: string[] = new Array(numPages).fill('');
-  let paginasProcessadas = 0;
-
-  // Processar em paralelo com workers dedicados
-  const processarPagina = async (
-    { pageNum, imageData }: { pageNum: number; imageData: ImageData },
-    workerIndex: number
-  ) => {
     const worker = workers[workerIndex];
-    const text = await worker.recognize(imageData, pageNum);
+    const { data } = await worker.recognize(canvas);
 
     paginasProcessadas++;
-    const percentual = 15 + Math.round((paginasProcessadas / numPages) * 85);
+    const percentual = 10 + Math.round((paginasProcessadas / numPages) * 90);
 
     onProgress?.({
       atual: paginasProcessadas,
       total: numPages,
       percentual,
-      fase: `OCR: ${paginasProcessadas}/${numPages}`,
+      fase: `Processando OCR: ${paginasProcessadas}/${numPages}`,
       paginaAtual: pageNum,
     });
 
-    return { pageNum, text };
+    return { pageNum, text: data.text };
   };
 
-  // Distribuir páginas entre workers
+  // Distribuir páginas entre workers (processamento paralelo)
   const promises: Promise<{ pageNum: number; text: string }>[] = [];
-  canvases.forEach((canvas, index) => {
-    const workerIndex = index % workers.length;
-    promises.push(processarPagina(canvas, workerIndex));
-  });
+  for (let i = 0; i < numPages; i++) {
+    const workerIndex = i % workers.length;
+    promises.push(processarPagina(i + 1, workerIndex));
+  }
 
   const results = await Promise.all(promises);
 
-  // Ordenar por número de página
+  // Ordenar resultados
   results.forEach(({ pageNum, text }) => {
     resultados[pageNum - 1] = text;
   });
