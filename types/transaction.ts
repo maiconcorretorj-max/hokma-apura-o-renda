@@ -22,6 +22,7 @@ export interface Transacao {
   is_validated: boolean; // entra no cálculo por padrão se true
   custom_tag?: string;   // 'washtrading' etc
   mesAno?: string;       // AAAA-MM (chave para agrupamento)
+  motivoExclusao?: string; // razão da exclusão pelo motor
 }
 
 export interface ApuracaoResult {
