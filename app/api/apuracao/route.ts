@@ -4,6 +4,10 @@ import { executarApuracao } from '@/api/apuracao';
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
+export const config = {
+  api: { bodyParser: { sizeLimit: '50mb' } },
+};
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
