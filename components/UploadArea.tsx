@@ -54,8 +54,8 @@ export function UploadArea({ onProcess, isProcessing }: UploadAreaProps) {
 
   const handleSubmit = () => {
     if (file) {
-      if (file.size > 50 * 1024 * 1024) { // 50MB limit
-        toast.error('Arquivo muito grande. Limite de 50MB.');
+      if (file.size > 150 * 1024 * 1024) { // 150MB limit
+        toast.error('Arquivo muito grande. Limite de 150MB.');
         return;
       }
       onProcess(file);
