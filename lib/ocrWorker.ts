@@ -74,10 +74,7 @@ export async function executarOcr(
     await page.render({ canvasContext: ctx, viewport }).promise;
 
     const worker = workers[workerIndex];
-    const { data } = await worker.recognize(canvas, {
-      tessedit_pageseg_mode: '1', // Automático com OSD
-      preserve_interword_spaces: '1', // Preservar espaços
-    });
+    const { data } = await worker.recognize(canvas);
 
     paginasProcessadas++;
     const percentual = 10 + Math.round((paginasProcessadas / numPages) * 90);
