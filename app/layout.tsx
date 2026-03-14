@@ -6,9 +6,9 @@ import { Toaster } from '@/components/ui/sonner';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Motor de Apuração de Renda',
-  description: 'Análise determinística de extratos bancários para apuração de renda mensal — 100% auditável.',
-  keywords: ['apuração de renda', 'extrato bancário', 'análise financeira'],
+  title: 'HOKMA — Sistema de Apuração de Renda',
+  description: 'Analise extratos bancários com precisão absoluta. Motor v3.0 determinístico com 8 regras de classificação — 100% auditável, zero IA.',
+  keywords: ['HOKMA', 'apuração de renda', 'extrato bancário', 'análise financeira', 'crédito', 'determinístico'],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

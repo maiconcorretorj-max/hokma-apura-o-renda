@@ -105,8 +105,9 @@ export default function LoginPage() {
                 <rect x="16" y="16" width="3" height="3" rx=".5" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold">Motor de Apuração de Renda</h1>
-            <p className="text-muted-foreground text-sm mt-1">
+            <h1 className="text-2xl font-bold tracking-tight">HOKMA</h1>
+            <p className="text-xs text-muted-foreground/60 uppercase tracking-widest font-medium">Sistema de Apuração de Renda</p>
+            <p className="text-muted-foreground text-sm mt-2">
               {mode === 'login' ? 'Acesse sua conta para continuar' : 'Crie sua conta gratuita'}
             </p>
           </div>

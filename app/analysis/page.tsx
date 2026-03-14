@@ -13,7 +13,7 @@ import { useTransactionFilters } from '@/hooks/useTransactionFilters';
 import { IncomeSummary } from '@/components/IncomeSummary';
 import { FiltersPanel } from '@/components/FiltersPanel';
 import { TransactionAccordion } from '@/components/TransactionAccordion';
-import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { supabase, isSupabaseConfigured, getCurrentUserId } from '@/lib/supabaseClient';
 
 export default function AnalysisPage() {
   const router = useRouter();
@@ -45,7 +45,14 @@ export default function AnalysisPage() {
 
     setIsSaving(true);
     try {
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        toast.error('Sessão expirada. Faça login novamente.');
+        return;
+      }
+
       const { error } = await supabase.from('income_reports').insert({
+        user_id: userId,
         cliente_nome: meta.nomeCliente || 'DESCONHECIDO',
         cpf: meta.cpf || null,
         pdf_hash: result.hashPdf,
@@ -53,8 +60,12 @@ export default function AnalysisPage() {
         media_mensal: filters.metricas.mediaMensal,
         divisao_6: filters.metricas.divisao6Meses,
         divisao_12: filters.metricas.divisao12Meses,
+        maior_mes: filters.metricas.maiorMes,
+        menor_mes: filters.metricas.menorMes,
+        meses_considerados: result.mesesConsiderados,
         transacoes_json: filters.transactions,
         versao_algoritmo: result.versaoAlgoritmo,
+        timestamp_processamento: result.timestamp,
       });
 
       if (error) throw error;

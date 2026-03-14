@@ -100,7 +100,7 @@ export default function DashboardPage() {
             <div className="w-7 h-7 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
               <div className="w-3 h-3 rounded-sm bg-primary" />
             </div>
-            <span className="font-bold text-sm">Motor de Apuração</span>
+            <span className="font-bold text-sm">HOKMA</span>
           </Link>
 
           <div className="flex items-center gap-3">
