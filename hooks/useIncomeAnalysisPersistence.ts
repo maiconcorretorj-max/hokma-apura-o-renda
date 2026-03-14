@@ -2,140 +2,142 @@
 
 /**
  * useIncomeAnalysisPersistence
- * Salva e restaura a sessão de Apuração de Renda no IndexedDB.
- * Interface compatível com o uso existente em dashboard e analysis pages.
+ * Salva em sessionStorage (síncrono — disponível imediatamente na navegação)
+ * e também persiste em IndexedDB como backup.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { type ApuracaoResult } from '@/types/transaction';
 
-const DB_NAME = 'hokma_apuracao';
-const STORE_NAME = 'income_session';
-const RESULT_KEY = 'result';
-const META_KEY = 'meta';
+// ── Chaves de storage ─────────────────────────────────────────
+const SS_RESULT = '@apuracao/result';
+const SS_META   = '@apuracao/meta';
+
+const DB_NAME   = 'hokma_apuracao';
+const DB_STORE  = 'session';
+const DB_RESULT = 'result';
+const DB_META   = 'meta';
 
 export interface ApuracaoMeta {
   nomeCliente: string;
   cpf: string;
 }
 
-// ── IndexedDB helpers ─────────────────────────────────────────────────────────
+// ── IndexedDB helpers (best-effort, sem bloquear o fluxo) ─────
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => {
-      req.result.createObjectStore(STORE_NAME);
-    };
+    req.onupgradeneeded = () => req.result.createObjectStore(DB_STORE);
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onerror   = () => reject(req.error);
   });
 }
 
-function dbGet<T>(db: IDBDatabase, key: string): Promise<T | null> {
+function idbSet(db: IDBDatabase, key: string, val: unknown): Promise<void> {
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const req = tx.objectStore(STORE_NAME).get(key);
+    const tx  = db.transaction(DB_STORE, 'readwrite');
+    const req = tx.objectStore(DB_STORE).put(val, key);
+    req.onsuccess = () => resolve();
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+function idbGet<T>(db: IDBDatabase, key: string): Promise<T | null> {
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(DB_STORE, 'readonly');
+    const req = tx.objectStore(DB_STORE).get(key);
     req.onsuccess = () => resolve(req.result ?? null);
-    req.onerror = () => reject(req.error);
+    req.onerror   = () => reject(req.error);
   });
 }
 
-function dbSet(db: IDBDatabase, key: string, value: unknown): Promise<void> {
+function idbDel(db: IDBDatabase, key: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const req = tx.objectStore(STORE_NAME).put(value, key);
+    const tx  = db.transaction(DB_STORE, 'readwrite');
+    const req = tx.objectStore(DB_STORE).delete(key);
     req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
+    req.onerror   = () => reject(req.error);
   });
 }
 
-function dbDelete(db: IDBDatabase, key: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const req = tx.objectStore(STORE_NAME).delete(key);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
-
-// ── Hook ──────────────────────────────────────────────────────────────────────
+// ── Hook ──────────────────────────────────────────────────────
 
 export function useIncomeAnalysisPersistence() {
-  const [result, setResult] = useState<ApuracaoResult | null>(null);
-  const [meta, setMeta] = useState<ApuracaoMeta>({ nomeCliente: '', cpf: '' });
+  const [result,   setResult]   = useState<ApuracaoResult | null>(null);
+  const [meta,     setMeta]     = useState<ApuracaoMeta>({ nomeCliente: '', cpf: '' });
   const [isLoaded, setIsLoaded] = useState(false);
-  const [db, setDb] = useState<IDBDatabase | null>(null);
+  const dbRef = useRef<IDBDatabase | null>(null);
 
-  // Inicializar DB e restaurar sessão
+  // ── Inicialização ─────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
 
+    // 1. sessionStorage (síncrono — carrega imediatamente)
+    try {
+      const sr = sessionStorage.getItem(SS_RESULT);
+      const sm = sessionStorage.getItem(SS_META);
+      if (sr && !cancelled) setResult(JSON.parse(sr));
+      if (sm && !cancelled) setMeta(JSON.parse(sm));
+    } catch { /* ignore */ }
+
+    // Marca como carregado imediatamente após sessionStorage
+    if (!cancelled) setIsLoaded(true);
+
+    // 2. IndexedDB (assíncrono — atualiza se tiver dados mais recentes)
     openDB()
-      .then(async (database) => {
+      .then(async (db) => {
         if (cancelled) return;
-        setDb(database);
+        dbRef.current = db;
 
-        const [storedResult, storedMeta] = await Promise.all([
-          dbGet<ApuracaoResult>(database, RESULT_KEY),
-          dbGet<ApuracaoMeta>(database, META_KEY),
-        ]);
+        const idbResult = await idbGet<ApuracaoResult>(db, DB_RESULT).catch(() => null);
+        const idbMeta   = await idbGet<ApuracaoMeta>(db, DB_META).catch(() => null);
 
-        if (!cancelled) {
-          if (storedResult) setResult(storedResult);
-          if (storedMeta) setMeta(storedMeta);
-          setIsLoaded(true);
-        }
+        if (!cancelled && idbResult) setResult(idbResult);
+        if (!cancelled && idbMeta)   setMeta(idbMeta);
       })
-      .catch(() => {
-        // Fallback para sessionStorage se IndexedDB não disponível
-        try {
-          const stored = sessionStorage.getItem('@apuracao/result');
-          if (stored) setResult(JSON.parse(stored));
-          const storedMeta = sessionStorage.getItem('@apuracao/meta');
-          if (storedMeta) setMeta(JSON.parse(storedMeta));
-        } catch {
-          // ignore
-        }
-        if (!cancelled) setIsLoaded(true);
-      });
+      .catch(() => { /* IndexedDB indisponível — sessionStorage suficiente */ });
 
     return () => { cancelled = true; };
   }, []);
 
-  const saveResult = useCallback(
-    async (newResult: ApuracaoResult, newMeta?: ApuracaoMeta) => {
-      setResult(newResult);
-      if (newMeta) setMeta(newMeta);
+  // ── Salvar ────────────────────────────────────────────────
+  // Sempre síncrono via sessionStorage → sem race condition na navegação
+  const saveResult = useCallback((newResult: ApuracaoResult, newMeta?: ApuracaoMeta) => {
+    // Estado React
+    setResult(newResult);
+    if (newMeta) setMeta(newMeta);
 
-      if (db) {
-        await Promise.all([
-          dbSet(db, RESULT_KEY, newResult),
-          newMeta ? dbSet(db, META_KEY, newMeta) : Promise.resolve(),
-        ]);
-      } else {
-        // Fallback sessionStorage
-        sessionStorage.setItem('@apuracao/result', JSON.stringify(newResult));
-        if (newMeta) sessionStorage.setItem('@apuracao/meta', JSON.stringify(newMeta));
-      }
-    },
-    [db]
-  );
+    // sessionStorage — síncrono, disponível imediatamente
+    try {
+      sessionStorage.setItem(SS_RESULT, JSON.stringify(newResult));
+      if (newMeta) sessionStorage.setItem(SS_META, JSON.stringify(newMeta));
+    } catch { /* ignore quota errors */ }
 
-  const clearResult = useCallback(async () => {
+    // IndexedDB — assíncrono, best-effort
+    if (dbRef.current) {
+      const db = dbRef.current;
+      idbSet(db, DB_RESULT, newResult).catch(() => {});
+      if (newMeta) idbSet(db, DB_META, newMeta).catch(() => {});
+    }
+  }, []);
+
+  // ── Limpar ────────────────────────────────────────────────
+  const clearResult = useCallback(() => {
     setResult(null);
     setMeta({ nomeCliente: '', cpf: '' });
 
-    if (db) {
-      await Promise.all([
-        dbDelete(db, RESULT_KEY),
-        dbDelete(db, META_KEY),
-      ]);
-    } else {
-      sessionStorage.removeItem('@apuracao/result');
-      sessionStorage.removeItem('@apuracao/meta');
+    try {
+      sessionStorage.removeItem(SS_RESULT);
+      sessionStorage.removeItem(SS_META);
+    } catch { /* ignore */ }
+
+    if (dbRef.current) {
+      const db = dbRef.current;
+      idbDel(db, DB_RESULT).catch(() => {});
+      idbDel(db, DB_META).catch(() => {});
     }
-  }, [db]);
+  }, []);
 
   return { result, meta, saveResult, clearResult, isLoaded };
 }
