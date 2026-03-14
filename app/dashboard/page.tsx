@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, CreditCard, LogOut, Loader2 } from 'lucide-react';
 import { UploadArea } from '@/components/UploadArea';
+import { ProcessingModal } from '@/components/ProcessingModal';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,13 @@ export default function DashboardPage() {
   const { saveResult } = useIncomeAnalysisPersistence();
   const router = useRouter();
 
+  const [progressState, setProgressState] = useState({
+    percentual: 0,
+    fase: '',
+    paginaAtual: 0,
+    totalPaginas: 0,
+  });
+
   const handleProcess = async (file: File) => {
     if (!nomeCliente.trim()) {
       toast.error('Informe o nome do cliente antes de processar.');
@@ -30,18 +38,29 @@ export default function DashboardPage() {
     }
 
     setIsProcessing(true);
+    setProgressState({ percentual: 0, fase: 'Iniciando...', paginaAtual: 0, totalPaginas: 0 });
+
     try {
       // 1. Hash SHA-256
+      setProgressState({ percentual: 5, fase: 'Gerando hash SHA-256...', paginaAtual: 0, totalPaginas: 0 });
       const fileBuffer = await file.slice().arrayBuffer();
       const hash = await hashPdf(fileBuffer);
 
       // 2. Extração via PDF.js por coordenadas Y/X
+      setProgressState({ percentual: 10, fase: 'Extraindo texto do PDF...', paginaAtual: 0, totalPaginas: 0 });
       let texto = await extrairTextoPdf(file);
 
       // 3. Fallback OCR para PDFs escaneados
       if (!texto || texto.trim().length < 50) {
         toast.info('PDF escaneado detectado. Iniciando OCR — isso pode levar alguns minutos...');
-        texto = await executarOcr(file);
+        texto = await executarOcr(file, (progresso) => {
+          setProgressState({
+            percentual: progresso.percentual,
+            fase: progresso.fase,
+            paginaAtual: progresso.paginaAtual || 0,
+            totalPaginas: progresso.total,
+          });
+        });
       }
 
       if (!texto || texto.trim().length < 50) {
@@ -49,6 +68,7 @@ export default function DashboardPage() {
       }
 
       // 4. Motor de apuração
+      setProgressState({ percentual: 90, fase: 'Processando motor de apuração...', paginaAtual: 0, totalPaginas: 0 });
       const response = await fetch('/api/apuracao', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -67,6 +87,8 @@ export default function DashboardPage() {
 
       const result = await response.json();
 
+      setProgressState({ percentual: 100, fase: 'Finalizado!', paginaAtual: 0, totalPaginas: 0 });
+
       if (result.transacoes.length === 0) {
         toast.warning('Nenhuma transação financeira reconhecida no documento.');
       } else {
@@ -80,6 +102,7 @@ export default function DashboardPage() {
       toast.error(err instanceof Error ? err.message : 'Falha ao processar arquivo.');
     } finally {
       setIsProcessing(false);
+      setProgressState({ percentual: 0, fase: '', paginaAtual: 0, totalPaginas: 0 });
     }
   };
 
@@ -176,6 +199,15 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Modal de progresso */}
+        <ProcessingModal
+          isOpen={isProcessing}
+          fase={progressState.fase}
+          percentual={progressState.percentual}
+          paginaAtual={progressState.paginaAtual}
+          totalPaginas={progressState.totalPaginas}
+        />
 
         {/* Área de upload */}
         <UploadArea onProcess={handleProcess} isProcessing={isProcessing} />

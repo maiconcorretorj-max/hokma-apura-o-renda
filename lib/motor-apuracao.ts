@@ -206,36 +206,81 @@ function parseMesAno(data: string): string {
 
 type ResultadoMatch = 'forte' | 'fraco' | 'sem_match';
 
+// Cache global de nomes identificados para consistência na detecção
+const cacheNomesIdentificados = new Map<string, ResultadoMatch>();
+
 function calcularMatch(nome: string, descricao: string, cpf?: string): ResultadoMatch {
   if (!nome || nome.trim().length === 0) return 'sem_match';
 
   const descNorm = normalizar(descricao);
 
-  if (descNorm.includes('MESMA TITULARIDADE')) return 'forte';
+  // Cache: evitar reclassificação inconsistente
+  const cacheKey = `${nome}::${descNorm}`;
+  if (cacheNomesIdentificados.has(cacheKey)) {
+    return cacheNomesIdentificados.get(cacheKey)!;
+  }
 
+  let resultado: ResultadoMatch = 'sem_match';
+
+  if (descNorm.includes('MESMA TITULARIDADE')) {
+    resultado = 'forte';
+    cacheNomesIdentificados.set(cacheKey, resultado);
+    return resultado;
+  }
+
+  // CPF completo ou parcial mascarado (ex: ***.830.487***)
   if (cpf) {
     const digits = cpf.replace(/[^\d]/g, '');
     if (digits.length >= 9) {
-      const cpfRegex = /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g;
+      // Buscar padrões de CPF na descrição
+      const cpfRegex = /\b[\d*]{3}\.?[\d*]{3}\.?[\d*]{3}-?[\d*]{2}\b/g;
       const found = descNorm.match(cpfRegex);
-      if (found?.some(m => m.replace(/[^\d]/g, '').includes(digits.slice(0, 9)))) {
-        return 'forte';
+      if (found) {
+        for (const cpfMasked of found) {
+          const cleanMasked = cpfMasked.replace(/[^\d*]/g, '');
+          // Match parcial: comparar apenas dígitos não mascarados
+          let matchCount = 0;
+          for (let i = 0; i < Math.min(cleanMasked.length, digits.length); i++) {
+            if (cleanMasked[i] !== '*' && cleanMasked[i] === digits[i]) {
+              matchCount++;
+            }
+          }
+          // Se 6+ dígitos coincidem, é match forte
+          if (matchCount >= 6) {
+            resultado = 'forte';
+            cacheNomesIdentificados.set(cacheKey, resultado);
+            return resultado;
+          }
+        }
       }
     }
   }
 
   const tokensNome = tokenizar(nome);
-  if (tokensNome.length === 0) return 'sem_match';
+  if (tokensNome.length === 0) {
+    cacheNomesIdentificados.set(cacheKey, resultado);
+    return resultado;
+  }
 
-  const encontrados = tokensNome.filter(t =>
-    new RegExp(`(?:^|\\s)${t}(?:\\s|$)`).test(descNorm)
-  );
+  // Melhorar detecção: buscar tokens de forma mais flexível
+  const encontrados = tokensNome.filter(t => {
+    // Word boundary padrão
+    if (new RegExp(`(?:^|\\s)${t}(?:\\s|$)`).test(descNorm)) return true;
+    // Fallback: busca sem word boundary (mais permissiva)
+    if (descNorm.includes(t)) return true;
+    return false;
+  });
 
   const percentual = Math.round((encontrados.length / tokensNome.length) * 100);
 
-  if (percentual >= 70 || encontrados.length >= 3) return 'forte';
-  if (encontrados.length >= 1) return 'fraco';
-  return 'sem_match';
+  if (percentual >= 70 || encontrados.length >= 3) {
+    resultado = 'forte';
+  } else if (encontrados.length >= 1) {
+    resultado = 'fraco';
+  }
+
+  cacheNomesIdentificados.set(cacheKey, resultado);
+  return resultado;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -669,6 +714,9 @@ export interface ApuracaoInput {
 
 export function executarApuracao(input: ApuracaoInput): ApuracaoResult {
   const { textoExtrato, nomeCliente, cpf, hashPdf } = input;
+
+  // Limpar cache de nomes para nova apuração
+  cacheNomesIdentificados.clear();
 
   const ctx: ContextoNomes = { nomeCliente: nomeCliente.trim(), cpf: cpf?.trim() };
 

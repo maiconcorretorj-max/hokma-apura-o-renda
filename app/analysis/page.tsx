@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Save, FileCheck, Loader2, User } from 'lucide-react';
+import { ChevronLeft, Save, FileCheck, Loader2, User, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import { IncomeSummary } from '@/components/IncomeSummary';
 import { FiltersPanel } from '@/components/FiltersPanel';
 import { TransactionAccordion } from '@/components/TransactionAccordion';
 import { supabase, isSupabaseConfigured, getCurrentUserId } from '@/lib/supabaseClient';
+import { gerarPdfApuracao } from '@/lib/pdfExporter';
 
 export default function AnalysisPage() {
   const router = useRouter();
@@ -83,6 +84,24 @@ export default function AnalysisPage() {
     router.push('/dashboard');
   };
 
+  const handleDownloadPdf = () => {
+    if (!result || !meta.nomeCliente) {
+      toast.error('Dados insuficientes para gerar o PDF.');
+      return;
+    }
+
+    try {
+      gerarPdfApuracao(result, {
+        nomeCliente: meta.nomeCliente,
+        cpf: meta.cpf,
+      });
+      toast.success('PDF gerado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.error('Erro ao gerar PDF. Tente novamente.');
+    }
+  };
+
   const totalTransacoesVisiveis = result.transacoes.filter(
     (t) => t.valor > 0 && t.classificacao !== 'ignorar_sem_keyword' && t.classificacao !== 'ignorar_estorno'
   ).length;
@@ -117,6 +136,14 @@ export default function AnalysisPage() {
             <span className="hidden sm:inline text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
               Motor v{result.versaoAlgoritmo}
             </span>
+            <Button
+              onClick={handleDownloadPdf}
+              variant="outline"
+              size="sm"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
             <Button
               onClick={handleSaveReport}
               disabled={isSaving || !isSupabaseConfigured}
