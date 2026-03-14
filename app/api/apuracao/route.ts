@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { executarApuracao } from '@/api/apuracao';
+import { executarApuracao } from '@/lib/motor-apuracao';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';

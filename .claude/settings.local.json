@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npx tsc --noEmit 2>&1 | head -60)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npx tsc --noEmit 2>&1 | head -40)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npx tsc --version 2>&1)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && find . -name \"*.tsbuildinfo\" -not -path \"*/node_modules/*\" 2>/dev/null && rm -f tsconfig.tsbuildinfo .next/cache/typescript/*.tsbuildinfo 2>/dev/null; npx tsc --noEmit --target ES2017 2>&1 | head -20)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npx tsc --noEmit 2>&1)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npm run build 2>&1 | tail -30)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npm install autoprefixer 2>&1 | tail -5)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npm run build 2>&1 | tail -40)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npm run build 2>&1 | tail -20)",
+      "Bash(supabase --version 2>&1)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npm install @radix-ui/react-tabs @radix-ui/react-navigation-menu 2>&1 | tail -5)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npm run build 2>&1 | tail -25)",
+      "Bash(curl -s -X POST \"https://xjrwdvhorlcguqznsela.supabase.co/auth/v1/signup\" \\\\\n  -H \"Content-Type: application/json\" \\\\\n  -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqcndkdmhvcmxjZ3Vxem5zZWxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NDIyNTksImV4cCI6MjA4OTAxODI1OX0.2kL4TfKZx9qTXwmCln6e9C8HDonLe22lBn1CJ9U5_rs\" \\\\\n  -d '{\"email\":\"test@hokma.app\",\"password\":\"test123456\"}' 2>&1)",
+      "Bash(curl -s \"https://xjrwdvhorlcguqznsela.supabase.co/auth/v1/settings\" \\\\\n  -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqcndkdmhvcmxjZ3Vxem5zZWxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NDIyNTksImV4cCI6MjA4OTAxODI1OX0.2kL4TfKZx9qTXwmCln6e9C8HDonLe22lBn1CJ9U5_rs\" 2>&1)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npx tsc --noEmit 2>&1 && echo \"TS OK\")",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npm run build 2>&1 | tail -18)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npm install postgres 2>&1 | tail -5)",
+      "Bash(cd \"C:\\\\Users\\\\hokma\\\\Desktop\\\\web-apuração de renda\" && npm run build 2>&1 | tail -20)",
+      "Bash(sleep 5 && curl -s -X POST http://localhost:3000/api/db-setup 2>&1)",
+      "Bash(curl -s -X POST http://localhost:3002/api/db-setup)",
+      "Bash(nslookup aws-0-sa-east-1.pooler.supabase.com 2>&1 | head -5 && nslookup db.xjrwdvhorlcguqznsela.supabase.co 2>&1 | head -5)",
+      "Bash(cd \"/c/Users/hokma/Desktop/web-apuração de renda\" && npm install pg 2>&1 | tail -3)",
+      "Bash(cd \"/c/Users/hokma/Desktop/web-apuração de renda\" && node scripts/setup-db.mjs 2>&1)",
+      "Bash(cd \"/c/Users/hokma/Desktop/web-apuração de renda\" && npm run build 2>&1)",
+      "Bash(cd \"/c/Users/hokma/Desktop/web-apuração de renda\" && npm run build 2>&1 | tail -20)",
+      "Bash(cd \"/c/Users/hokma/Desktop/web-apuração de renda\" && npm uninstall pg postgres 2>&1 | tail -5)",
+      "WebFetch(domain:www.picpay.com)",
+      "Bash(cd \"C:\\\\Users\\\\hokma\\\\Desktop\\\\web-apuração de renda\" && npx tsc --noEmit 2>&1)",
+      "Bash(cd \"C:/Users/hokma/Desktop/web-apuração de renda\" && npm run build 2>&1)",
+      "Bash(pkill -f \"next dev\" 2>/dev/null; true)",
+      "Bash(npm run build)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(git add app/api/apuracao/route.ts)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: adicionar logs detalhados e melhor tratamento de erros no endpoint de apuração\n\n- Adicionar logs em cada etapa do processamento\n- Validar serialização JSON do resultado\n- Melhorar mensagens de erro com stack trace\n- Facilitar debug de erros 500 em produção\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git add -A)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: reorganizar motor de apuração para resolver erro de módulo ES no Vercel\n\n- Mover api/apuracao.ts → lib/motor-apuracao.ts\n- Remover pasta api/ antiga (conflito com App Router)\n- Atualizar import em app/api/apuracao/route.ts\n- Resolver erro FUNCTION_INVOCATION_FAILED no deploy\n\nIsso corrige o erro \"Failed to load the ES module\" que estava\nimpedindo o endpoint /api/apuracao de funcionar em produção.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ]
+  }
+}
