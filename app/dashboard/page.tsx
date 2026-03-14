@@ -61,6 +61,11 @@ export default function DashboardPage() {
             totalPaginas: progresso.total,
           });
         });
+
+        // Log para debug (remover depois)
+        console.log('📝 Texto extraído pelo OCR (primeiros 2000 caracteres):');
+        console.log(texto.substring(0, 2000));
+        console.log(`📏 Total de caracteres: ${texto.length}`);
       }
 
       if (!texto || texto.trim().length < 50) {

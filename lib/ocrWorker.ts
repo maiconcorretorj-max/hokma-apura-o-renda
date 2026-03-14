@@ -61,10 +61,10 @@ export async function executarOcr(
   const resultados: string[] = new Array(numPages).fill('');
   let paginasProcessadas = 0;
 
-  // Processar uma página
+  // Processar uma página com máxima qualidade
   const processarPagina = async (pageNum: number, workerIndex: number) => {
     const page = await pdf.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 1.5 });
+    const viewport = page.getViewport({ scale: 2.5 }); // Aumentado para 2.5x (melhor qualidade)
 
     const canvas = document.createElement('canvas');
     canvas.width = viewport.width;
@@ -74,7 +74,10 @@ export async function executarOcr(
     await page.render({ canvasContext: ctx, viewport }).promise;
 
     const worker = workers[workerIndex];
-    const { data } = await worker.recognize(canvas);
+    const { data } = await worker.recognize(canvas, {
+      tessedit_pageseg_mode: '1', // Automático com OSD
+      preserve_interword_spaces: '1', // Preservar espaços
+    });
 
     paginasProcessadas++;
     const percentual = 10 + Math.round((paginasProcessadas / numPages) * 90);
