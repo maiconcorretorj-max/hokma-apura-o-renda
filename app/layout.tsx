@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Figtree } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
+import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: 'HOKMA — Sistema de Apuração de Renda',
@@ -13,8 +14,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning className={inter.variable}>
-      <body className={inter.className}>
+    <html lang="pt-BR" suppressHydrationWarning className={cn("font-sans", figtree.variable)}>
+      <body className={figtree.className}>
         {children}
         <Toaster richColors position="top-right" />
       </body>
