@@ -106,49 +106,29 @@ const HERO_IMAGES: string[] = Array.from({ length: 40 }, (_, i) => {
 const HERO_LABELS = ['Upload', '', '', '', 'Processando', '', '', '', '', 'Dashboard', '', '', '', '', 'Acordeão', '', '', '', '', 'Métricas', '', '', '', '', 'Exportar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];
 
 function HeroSequence({ isLoggedIn, onCTA }: { isLoggedIn: boolean; onCTA: () => void }) {
-  const [idx, setIdx] = useState(0);
-  const [playing, setPlaying] = useState(true);
-
-  // Auto-play: 40 frames × 80ms = 3.2s per loop, runs continuously
-  useEffect(() => {
-    if (!playing) return;
-    const timer = setInterval(() => {
-      setIdx(prev => (prev + 1) % HERO_IMAGES.length);
-    }, 80);
-    return () => clearInterval(timer);
-  }, [playing]);
-
   return (
-    // Normal 100vh section — no sticky trap
     <section className="relative h-screen overflow-hidden">
 
-      {/* ── BACKGROUND: auto-playing 40-frame animation ─────────────────── */}
+      {/* ── BACKGROUND VIDEO — smooth 12fps loop via native browser decoder ── */}
       <div className="absolute inset-0 z-0">
-        {HERO_IMAGES.map((src, i) => (
-          <motion.div
-            key={src}
-            animate={{ opacity: idx === i ? 1 : 0 }}
-            transition={{ duration: 0.06 }}
-            className="absolute inset-0"
-            style={{ pointerEvents: 'none' }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={src}
-              alt=""
-              className="w-full h-full object-cover object-center"
-              loading={i === 0 ? 'eager' : 'lazy'}
-            />
-          </motion.div>
-        ))}
+        <video
+          className="w-full h-full object-cover object-center"
+          autoPlay
+          loop
+          muted
+          playsInline
+        >
+          <source src="/videos/hero.webm" type="video/webm" />
+          <source src="/videos/hero.mp4" type="video/mp4" />
+        </video>
 
         {/* Dark overlay — keeps text readable */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/25" />
-        {/* Fade at bottom into next section */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
+        {/* Bottom fade into next section */}
         <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-black to-transparent" />
       </div>
 
-      {/* ── FOREGROUND: Text + CTAs ────────────────────────────────── */}
+      {/* ── FOREGROUND: Text + CTAs ────────────────────────────────────────── */}
       <div className="relative z-10 h-full flex items-center">
         <div className="max-w-screen-xl mx-auto px-6 w-full pt-20">
           <motion.div
@@ -208,20 +188,6 @@ function HeroSequence({ isLoggedIn, onCTA }: { isLoggedIn: boolean; onCTA: () =>
             </motion.div>
           </motion.div>
         </div>
-      </div>
-
-      {/* Progress bar — shows counter progress 0→100% */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
-        <div className="w-36 h-1 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
-          <motion.div
-            className="h-full bg-blue-500 rounded-full"
-            animate={{ width: `${(idx / (HERO_IMAGES.length - 1)) * 100}%` }}
-            transition={{ duration: 0.06 }}
-          />
-        </div>
-        <span className="font-mono text-xs text-white/50 tabular-nums w-8">
-          {Math.round((idx / (HERO_IMAGES.length - 1)) * 100)}%
-        </span>
       </div>
 
     </section>
