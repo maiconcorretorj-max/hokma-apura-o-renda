@@ -123,7 +123,9 @@ function HeroSequence({ isLoggedIn, onCTA }: { isLoggedIn: boolean; onCTA: () =>
   }, []);
 
   return (
-    <div ref={wrapperRef} style={{ height: `${HERO_IMAGES.length * 100}vh` }}>
+    // 300vh total: the sticky section is 100vh, so the user scrolls 200vh to trigger all 40 frames.
+    // That means each frame advances every ~5vh of scrolling — smooth and cinematic.
+    <div ref={wrapperRef} style={{ height: '300vh' }}>
       <div className="sticky top-0 h-screen overflow-hidden flex items-center">
         {/* Background glow */}
         <div className="absolute inset-0 -z-10">
