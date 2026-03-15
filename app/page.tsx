@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, useInView, type Variants } from 'framer-motion';
 import {
-  CheckCircle2, ArrowRight, Shield, Zap, FileText,
-  Clock, Cpu, Settings, Lock, FileSearch, Database,
-  ChevronRight, Hexagon, Star, Menu, Download, BarChart3, TrendingUp, X, AlertTriangle
+  CheckCircle2, ArrowRight, Shield, Database, LayoutDashboard,
+  Clock, Cpu, Settings, FileSearch, TrendingUp,
+  ChevronRight, Hexagon, Star, Menu, Download, AlertTriangle, X,
+  Lock as LockIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,54 +16,63 @@ import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabaseClient';
 import { cn } from '@/lib/utils';
 
+// --- Assets ---
+// The prompt expects images sequentially in /images/. 
+// Using fallbacks if actual images don't exist is a good idea.
+const HERO_IMAGES = [
+  '/images/01-upload.png',
+  '/images/02-processando.png',
+  '/images/03-dashboard.png',
+  '/images/04-acordeao.png',
+  '/images/05-metricas.png',
+  '/images/06-export.png',
+];
+
 // --- Animations ---
-const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0 }
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 32 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } }
 };
 
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
-const glowVariants = {
-  hover: { opacity: 1, scale: 1.1, filter: "blur(20px)" },
-  initial: { opacity: 0.5, scale: 1, filter: "blur(10px)" }
-};
-
 // --- Components ---
+
 const NavBar = ({ isLoggedIn, handleCTA, mobileMenuOpen, setMobileMenuOpen }: any) => {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
     <header className={cn(
       "fixed top-0 z-50 w-full transition-all duration-300 border-b",
-      scrolled ? "bg-zinc-950/80 backdrop-blur-xl border-white/10 py-3 shadow-2xl shadow-black/50" : "bg-transparent border-transparent py-5"
+      scrolled 
+        ? "bg-[var(--background)]/80 backdrop-blur-xl border-[var(--border)] py-3 shadow-2xl" 
+        : "bg-transparent border-transparent py-5"
     )}>
       <div className="container px-6 max-w-screen-xl mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 text-white shadow-lg shadow-violet-500/20 group-hover:shadow-violet-500/40 group-hover:scale-105 transition-all duration-300">
-            <Hexagon className="h-5 w-5 fill-current" />
-            <div className="absolute inset-0 bg-white/20 blur-md rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="relative flex items-center justify-center w-8 h-8 rounded-sm bg-[var(--accent)] text-[var(--background)] shadow-[0_0_15px_var(--accent-glow)] transform rotate-45 group-hover:rotate-180 transition-all duration-500">
+            <Hexagon className="h-4 w-4 fill-current -rotate-45 group-hover:rotate-180 transition-all duration-500" />
           </div>
-          <span className="font-bold text-xl tracking-tight text-white group-hover:text-violet-100 transition-colors">HOKMA</span>
+          <span className="font-display font-bold text-xl tracking-tight text-[var(--text-primary)] transition-colors">HOKMA</span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-10 bg-white/5 px-6 py-2.5 rounded-full border border-white/10 backdrop-blur-md">
+        <nav className="hidden md:flex items-center gap-10">
           {[
             ['#como-funciona', 'Como Funciona'], 
             ['#features', 'Vantagens'], 
             ['#pricing', 'Preços']
           ].map(([href, label]) => (
-            <a key={href} href={href} className="text-sm font-medium tracking-wide text-zinc-300 hover:text-white transition-colors">
+            <a key={href} href={href} className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors">
               {label}
             </a>
           ))}
@@ -70,23 +80,23 @@ const NavBar = ({ isLoggedIn, handleCTA, mobileMenuOpen, setMobileMenuOpen }: an
 
         <div className="hidden md:flex items-center gap-4">
           {isLoggedIn ? (
-            <Button onClick={handleCTA} className="bg-white text-black hover:bg-zinc-200 font-bold tracking-tight shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-full px-6 h-11 transition-all hover:scale-105">
+            <Button onClick={handleCTA} className="bg-[var(--accent)] text-[var(--background)] hover:bg-[#D4B881] font-bold tracking-tight shadow-[0_0_20px_var(--accent-glow)] rounded-sm px-6 h-10 transition-all hover:translate-y-[-2px]">
               Dashboard <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
             <>
-              <Button variant="ghost" asChild className="text-zinc-300 hover:text-white hover:bg-white/10 font-medium tracking-tight rounded-full px-5">
+              <Button variant="ghost" asChild className="text-[var(--text-primary)] hover:bg-[var(--surface-alt)] font-medium tracking-tight rounded-sm px-5 h-10 transition-colors">
                 <Link href="/login">Entrar</Link>
               </Button>
-              <Button onClick={handleCTA} className="bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-600/25 font-bold tracking-wide rounded-full px-6 h-11 transition-all hover:scale-105 hover:shadow-violet-500/40">
-                Começar Teste <ChevronRight className="h-4 w-4 ml-1" />
+              <Button onClick={handleCTA} className="bg-[var(--accent)] text-[var(--background)] hover:bg-[#D4B881] font-bold tracking-tight shadow-[0_0_20px_var(--accent-glow)] rounded-sm px-6 h-10 transition-all hover:translate-y-[-2px]">
+                Começar Grátis <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </>
           )}
         </div>
 
         {/* Mobile Toggle */}
-        <button className="md:hidden text-zinc-300 hover:text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+        <button className="md:hidden text-[var(--text-primary)]" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
@@ -95,13 +105,13 @@ const NavBar = ({ isLoggedIn, handleCTA, mobileMenuOpen, setMobileMenuOpen }: an
       {mobileMenuOpen && (
         <motion.div 
           initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-          className="absolute top-full left-0 w-full bg-zinc-950/95 backdrop-blur-3xl border-b border-white/10 py-6 px-6 flex flex-col gap-6 md:hidden shadow-2xl"
+          className="absolute top-full left-0 w-full bg-[var(--background)]/95 backdrop-blur-3xl border-b border-[var(--border)] py-6 px-6 flex flex-col gap-6 md:hidden shadow-2xl"
         >
-          <a href="#como-funciona" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium text-zinc-300">Como Funciona</a>
-          <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium text-zinc-300">Vantagens</a>
-          <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium text-zinc-300">Planos</a>
-          <div className="h-px bg-white/10 w-full" />
-          <Button onClick={handleCTA} className="w-full bg-violet-600 text-white font-bold h-12 rounded-xl">
+          <a href="#como-funciona" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium text-[var(--text-primary)]">Como Funciona</a>
+          <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium text-[var(--text-primary)]">Vantagens</a>
+          <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium text-[var(--text-primary)]">Planos</a>
+          <div className="h-px bg-[var(--border)] w-full" />
+          <Button onClick={handleCTA} className="w-full bg-[var(--accent)] text-[var(--background)] font-bold h-12 rounded-sm shadow-[0_0_20px_var(--accent-glow)]">
             {isLoggedIn ? 'Acessar Dashboard' : 'Iniciar Teste de 7 Dias'}
           </Button>
         </motion.div>
@@ -110,15 +120,156 @@ const NavBar = ({ isLoggedIn, handleCTA, mobileMenuOpen, setMobileMenuOpen }: an
   );
 };
 
+// --- Hero Sequence Component ---
+const ScrollSequenceHero = ({ isLoggedIn, handleCTA }: any) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!wrapperRef.current) return;
+      const rect = wrapperRef.current.getBoundingClientRect();
+      const wrapperHeight = wrapperRef.current.offsetHeight;
+      
+      // Calculate progress between 0 and 1
+      const progress = Math.max(0, Math.min(1, (-rect.top) / (wrapperHeight - window.innerHeight)));
+      
+      const rawIndex = progress * (HERO_IMAGES.length - 1);
+      const newIndex = Math.round(rawIndex);
+      setCurrentIndex(newIndex);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Init
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div ref={wrapperRef} style={{ height: `${HERO_IMAGES.length * 100}vh` }} className="relative">
+      <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden pt-20">
+        <div className="container max-w-screen-xl mx-auto px-6 h-full flex flex-col lg:flex-row items-center justify-center gap-12">
+          
+          {/* Left Column: Copy */}
+          <div className="w-full lg:w-[45%] flex flex-col items-start z-10">
+            <Badge variant="outline" className="px-4 py-1.5 rounded-sm border-[var(--accent)]/30 bg-[var(--accent)]/10 text-[var(--accent)] font-mono-data tracking-wide flex items-center gap-2 shadow-[0_0_15px_var(--accent-glow)] mb-6">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent)]"></span>
+              </span>
+              Motor v3.0 Inteligente
+            </Badge>
+
+            <h1 className="text-5xl md:text-7xl font-display font-extrabold tracking-tight leading-[1.05] text-[var(--text-primary)] mb-6">
+              Apure rendimentos em <br/>
+              <span className="text-[var(--accent)] relative">
+                segundos
+                <div className="absolute -bottom-1 left-0 w-full h-1 bg-[var(--accent)]/30 blur-sm"></div>
+              </span>,<br/>
+              não em horas.
+            </h1>
+
+            <p className="text-lg md:text-xl text-[var(--text-secondary)] font-light leading-relaxed mb-10 max-w-lg">
+              A plataforma definitiva para auditores. Extração determinística de PDFs bancários com 
+              <span className="text-[var(--text-primary)] font-medium"> precisão de 99.9%</span>. Nenhuma IA adivinhando números.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+               <Button
+                  size="lg"
+                  onClick={handleCTA}
+                  className="group relative h-14 rounded-sm px-8 text-base font-bold bg-[var(--accent)] text-[var(--background)] hover:bg-[#D4B881] transition-all hover:translate-y-[-2px] shadow-[0_0_20px_var(--accent-glow)] w-full sm:w-auto"
+                >
+                  {isLoggedIn ? 'Acessar Workspace' : 'Iniciar Teste de 7 Dias Grátis'}
+                  <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-14 rounded-sm px-8 text-base font-medium border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-alt)] text-[var(--text-primary)] transition-all w-full sm:w-auto"
+                  onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  Ver como funciona ↓
+                </Button>
+            </div>
+            
+            {/* Supported Banks Marquee */}
+            <div className="mt-16 w-full overflow-hidden relative opacity-50 hover:opacity-100 transition-opacity max-w-[400px]">
+               <div className="absolute left-0 top-0 bottom-0 w-12 z-10 bg-gradient-to-r from-[var(--background)] to-transparent pointer-events-none"></div>
+               <div className="absolute right-0 top-0 bottom-0 w-12 z-10 bg-gradient-to-l from-[var(--background)] to-transparent pointer-events-none"></div>
+
+               <div className="flex gap-8 items-center w-max animate-[scroll_20s_linear_infinite] grayscale hover:grayscale-0 transition-all font-display text-lg font-bold">
+                 {[...Array(2)].map((_, arrayIndex) => (
+                   <div key={arrayIndex} className="flex gap-8 items-center text-[var(--text-secondary)]">
+                     <span>Itaú</span>
+                     <span>Nubank</span>
+                     <span>Bradesco</span>
+                     <span>Santander</span>
+                     <span>Caixa</span>
+                     <span>Inter</span>
+                     <span>Banco do Brasil</span>
+                   </div>
+                 ))}
+               </div>
+            </div>
+
+          </div>
+
+          {/* Right Column: Sequence Mockup */}
+          <div className="hidden lg:flex w-[55%] items-center justify-center relative">
+             <div className="w-[120%] max-w-[900px] h-[600px] bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl relative overflow-hidden flex flex-col">
+                <div className="h-10 bg-[var(--surface-alt)] border-b border-[var(--border)] flex items-center px-4 gap-2">
+                   <div className="w-3 h-3 rounded-full bg-[#E74C3C]/50" />
+                   <div className="w-3 h-3 rounded-full bg-[#F39C12]/50" />
+                   <div className="w-3 h-3 rounded-full bg-[#2ECC71]/50" />
+                   <div className="flex-1 text-center font-mono-data text-xs text-[var(--text-muted)]">hokma.app/dashboard</div>
+                </div>
+                <div className="flex-1 relative bg-[var(--background)] flex items-center justify-center">
+                  
+                  {HERO_IMAGES.map((src, idx) => (
+                    <motion.div 
+                      key={src}
+                      initial={false}
+                      animate={{ opacity: currentIndex === idx ? 1 : 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute inset-0 flex items-center justify-center p-4"
+                      style={{ pointerEvents: currentIndex === idx ? 'auto' : 'none' }}
+                    >
+                      {/* Using a placeholder text since /images/ might not exist locally */}
+                      <div className="w-full h-full border border-[var(--border)] border-dashed rounded-lg flex flex-col items-center justify-center text-[var(--text-muted)] p-8">
+                         <LayoutDashboard className="w-16 h-16 mb-4 opacity-50" />
+                         <span className="font-mono-data text-sm">IMAGE: {src}</span>
+                         <span className="text-xs opacity-50 mt-2">Replace with actual image in public/images/</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                  
+                </div>
+             </div>
+
+             {/* Step Indicators */}
+             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3">
+               {HERO_IMAGES.map((_, idx) => (
+                 <div 
+                   key={idx} 
+                   className={cn(
+                     "w-2.5 h-2.5 rounded-full transition-colors duration-300",
+                     currentIndex === idx ? "bg-[var(--accent)] shadow-[0_0_10px_var(--accent-glow)]" : "bg-[var(--border)]"
+                   )}
+                 />
+               ))}
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Main Page Component ---
 export default function HokmaLanding() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isAnnual, setIsAnnual] = useState(true);
-
-  // Parallax effects
-  const { scrollYProgress } = useScroll();
-  const yHeroBg = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
 
   useEffect(() => {
     supabase?.auth.getSession().then(({ data }) => {
@@ -129,541 +280,280 @@ export default function HokmaLanding() {
   const handleCTA = () => router.push(isLoggedIn ? '/dashboard' : '/login');
 
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-50 selection:bg-violet-500/30 overflow-hidden font-sans">
+    <div className="min-h-screen font-sans selection:bg-[var(--accent)]/30 overflow-hidden relative">
       
-      {/* Global Styles */}
-      <style dangerouslySetInnerHTML={{__html: `
-        :root { --radius: 0.75rem; }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap');
-        
-        body { font-family: 'Inter', sans-serif; }
-        h1, h2, h3, h4, .font-display { font-family: 'Outfit', sans-serif; }
-        
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 9999px; }
-        ::-webkit-scrollbar-thumb:hover { background: #7c3aed; }
-        
-        .glass-panel {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        
-        .text-gradient {
-          background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-        
-        .text-gradient-primary {
-          background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-      `}} />
+      {/* Global Grain Font and Styles included in globals.css */}
+      <div className="grain pointer-events-none fixed inset-0 z-50"></div>
 
       <NavBar isLoggedIn={isLoggedIn} handleCTA={handleCTA} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
-      {/* ── HERO SECTION ──────────────────────────────────────── */}
-      <section className="relative pt-40 pb-20 md:pt-56 md:pb-32 flex flex-col items-center justify-center min-h-[95vh]">
-        {/* Background Gradients & Grids */}
-        <motion.div style={{ y: yHeroBg }} className="absolute inset-0 -z-10 w-full h-full">
-          <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-violet-600/20 rounded-full blur-[120px] mix-blend-screen pointer-events-none" />
-          <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px] mix-blend-screen pointer-events-none" />
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay pointer-events-none" />
-          {/* Subtle Grid */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
-        </motion.div>
-        
-        <motion.div 
-          initial="hidden" animate="visible" variants={staggerContainer}
-          className="container max-w-screen-lg mx-auto text-center px-6 relative z-10"
-        >
-          <motion.div variants={fadeUp} className="flex justify-center mb-8">
-            <Badge variant="outline" className="px-4 py-1.5 rounded-full border-violet-500/30 bg-violet-500/10 text-violet-300 font-medium tracking-wide flex items-center gap-2 backdrop-blur-sm shadow-[0_0_15px_rgba(139,92,246,0.15)]">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
-              </span>
-              Motor v3.0 Inteligente Lançado
-            </Badge>
-          </motion.div>
-
-          <motion.h1 
-            variants={fadeUp}
-            className="text-6xl md:text-8xl font-display font-extrabold tracking-tight leading-[1.05] mb-8"
-          >
-            Apure rendimentos em <br className="hidden md:block"/>
-            <span className="relative inline-block">
-              <span className="text-gradient-primary">segundos</span>
-              <div className="absolute -bottom-2 left-0 w-full h-3 bg-violet-600/30 blur-md rounded-full -z-10"></div>
-            </span>, não em horas.
-          </motion.h1>
-
-          <motion.p 
-            variants={fadeUp}
-            className="text-xl md:text-2xl text-zinc-400 font-medium leading-relaxed max-w-3xl mx-auto mb-12 font-light"
-          >
-            Abandone o caos de planilhas e PDFs ilegíveis. O Hokma extrai dados bancários 
-            automaticamente com <span className="text-zinc-200">precisão de 99.9%</span> através da nossa matriz determinística infalível.
-          </motion.p>
-
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-5 justify-center items-center">
-             <Button
-                size="lg"
-                onClick={handleCTA}
-                className="group relative h-16 rounded-full px-10 text-lg font-bold bg-white text-black hover:bg-zinc-100 transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)] w-full sm:w-auto overflow-hidden"
-              >
-                <span className="relative z-10 flex items-center">
-                  {isLoggedIn ? 'Acessar Workspace' : 'Iniciar Teste de 7 Dias Grátis'}
-                  <ArrowRight className="h-5 w-5 ml-3 group-hover:translate-x-1 transition-transform" />
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-16 rounded-full px-8 text-lg font-semibold border-white/10 bg-white/5 hover:bg-white/10 text-white backdrop-blur-md transition-all w-full sm:w-auto"
-                onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                Ver como funciona
-              </Button>
-          </motion.div>
-
-          <motion.div variants={fadeUp} className="mt-16 w-full max-w-5xl mx-auto overflow-hidden relative">
-             <p className="text-sm font-semibold tracking-widest uppercase text-zinc-500 text-center w-full mb-6">Bancos Suportados</p>
-             
-             {/* Gradient Masks for Marquee */}
-             <div className="absolute left-0 top-0 bottom-0 w-24 z-10 bg-gradient-to-r from-[#050505] to-transparent pointer-events-none"></div>
-             <div className="absolute right-0 top-0 bottom-0 w-24 z-10 bg-gradient-to-l from-[#050505] to-transparent pointer-events-none"></div>
-
-             <div className="flex gap-12 items-center w-max animate-[scroll_40s_linear_infinite] hover:[animation-play-state:paused] opacity-70 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
-               {/* 
-                 Duplicated list for infinite scroll effect 
-                 Included requested banks: MERCADO PAGO, NUBANK, INTER, CAIXA, BANCO DO BRASIL, BRADESCO, INFINITE PAY, ITAU, PAGBANK, NEXT, C6BANK, NEON, PICPAY, SANTANDER
-               */}
-               {[...Array(2)].map((_, arrayIndex) => (
-                 <div key={arrayIndex} className="flex gap-12 items-center">
-                   
-                   {/* Nubank */}
-                   <div className="flex items-center gap-2 font-display font-bold text-2xl tracking-tighter text-[#8A05BE]">
-                     <svg viewBox="0 0 24 24" className="w-8 h-8 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.48 14.5L7 13l1.41-1.41L10.52 13.7l6.07-6.07L18 9l-7.48 7.5z"/></svg>
-                     Nubank
-                   </div>
-
-                   {/* Itaú */}
-                   <div className="flex items-center gap-2 font-display font-black text-2xl italic tracking-tighter text-[#EC7000]">
-                     Itaú
-                   </div>
-
-                   {/* Bradesco */}
-                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#CC092F]">
-                     <div className="w-6 h-6 bg-[#CC092F] rounded-sm transform rotate-45 flex items-center justify-center">
-                       <div className="w-3 h-3 bg-white rounded-full"></div>
-                     </div>
-                     Bradesco
-                   </div>
-
-                   {/* Caixa */}
-                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#185E9C] tracking-tight">
-                     <span className="text-[#F39200]">CAIXA</span>
-                   </div>
-
-                   {/* Banco do Brasil */}
-                   <div className="flex items-center gap-2 font-display font-bold text-xl text-[#F8D117]">
-                     <div className="w-6 h-6 bg-[#003da5] flex items-center justify-center font-serif text-[#F8D117]">BB</div>
-                     Banco do Brasil
-                   </div>
-
-                   {/* Inter */}
-                   <div className="flex items-center gap-2 font-display font-black text-2xl text-[#FF7A00] tracking-tighter">
-                     inter
-                   </div>
-
-                   {/* Mercado Pago */}
-                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#009EE3]">
-                     <svg viewBox="0 0 24 24" className="w-8 h-8 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
-                     Mercado Pago
-                   </div>
-
-                   {/* PagBank */}
-                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#90c53e]">
-                     Pag<span className="text-white">Bank</span>
-                   </div>
-
-                   {/* Next */}
-                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#00FF5F]">
-                     next
-                   </div>
-
-                   {/* C6 Bank */}
-                   <div className="flex items-center gap-2 font-display font-black text-2xl text-white">
-                     C6 Bank
-                   </div>
-
-                   {/* Neon */}
-                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#00E5FF]">
-                     neon
-                   </div>
-
-                   {/* PicPay */}
-                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#11C76F]">
-                     PicPay
-                   </div>
-
-                   {/* Santander */}
-                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#EC0000]">
-                      <svg viewBox="0 0 24 24" className="w-8 h-8 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
-                      Santander
-                   </div>
-
-                   {/* InfinitePay */}
-                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-white">
-                     <span className="text-[#000]">∞</span> InfinitePay
-                   </div>
-
-                 </div>
-               ))}
-             </div>
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* ── METRICS / KPIs ─────────────────────────────────────── */}
-      <section className="relative z-20 -mt-10 px-6 max-w-screen-xl mx-auto">
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            { icon: Clock, label: "Tempo Salvo", value: "35h/mês", sub: "Média por auditor" },
-            { icon: Shield, label: "Precisão", value: "99.9%", sub: "Motor Zero-IA Determinístico" },
-            { icon: Database, label: "Bancos Mapeados", value: "15+", sub: "Atualizações constantes" }
-          ].map((kpi, i) => (
-             <motion.div 
-               key={i}
-               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ delay: i * 0.1 }}
-               className="glass-panel p-8 rounded-3xl relative overflow-hidden group hover:border-violet-500/30 transition-colors"
-             >
-               <div className="absolute -right-10 -top-10 w-32 h-32 bg-violet-600/10 rounded-full blur-2xl group-hover:bg-violet-600/20 transition-colors" />
-               <kpi.icon className="h-8 w-8 text-violet-400 mb-6" />
-               <p className="text-zinc-400 font-medium mb-1">{kpi.label}</p>
-               <h3 className="text-4xl font-display font-bold text-white mb-2">{kpi.value}</h3>
-               <p className="text-sm text-zinc-500">{kpi.sub}</p>
-             </motion.div>
-          ))}
-        </div>
-      </section>
+      {/* ── HERO SECTION (SCROLL SEQUENCE) ──────────────────── */}
+      <ScrollSequenceHero isLoggedIn={isLoggedIn} handleCTA={handleCTA} />
 
       {/* ── PROBLEM / AGITATION ────────────────────────────── */}
-      <section id="features" className="py-32 relative">
+      <section id="problema" className="py-32 relative bg-[var(--background)] border-t border-[var(--border)] z-20">
         <div className="container max-w-screen-xl mx-auto px-6">
           <motion.div 
             initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp}
             className="text-center mb-20 max-w-3xl mx-auto"
           >
-            <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-white mb-6">
+            <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-[var(--text-primary)] mb-6">
               Ainda faz apurações na mão?
             </h2>
-            <p className="text-xl text-zinc-400 font-light">
+            <p className="text-xl text-[var(--text-secondary)] font-light">
               A auditoria financeira artesanal é lenta, sujeita a falhas humanas e consome as horas mais preciosas da sua operação.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {[
-              { title: 'Perda de Tempo', desc: 'Digitar valores no Excel linha por linha demora dezenas de horas preciosas por cliente ou projeto judicial.', icon: Clock, color: "text-amber-400", bg: "bg-amber-400/10" },
-              { title: 'Insegurança Crítica', desc: 'No sistema arcaico, um simples erro de digitação compromete e invalida toda a arquitetura de apuração.', icon: Shield, color: "text-red-400", bg: "bg-red-400/10" },
-              { title: 'PDFs Impossíveis', desc: 'Banco mandou scan fotografado ou ilegível? Nossa tecnologia nativa extrai caracteres com precisão Tesseract.', icon: FileSearch, color: "text-blue-400", bg: "bg-blue-400/10" },
+              { title: 'Horas desperdiçadas', desc: 'Digitar linha por linha no Excel consome dezenas de horas por cliente. 35h/mês em média perdidas por auditor.', icon: Clock },
+              { title: 'Erro humano inevitável', desc: 'No sistema arcaico, um simples erro de digitação compromete e invalida toda a arquitetura de apuração.', icon: AlertTriangle },
+              { title: 'PDFs impossíveis', desc: 'Bancos mandam scans fotografados ou ilégiveis que quebram planilhas manuais. Nós extraímos via OCR.', icon: FileSearch },
             ].map((err, i) => (
                <motion.div 
                  key={err.title}
                  initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
-                 className="glass-panel p-8 rounded-[2rem] hover:bg-white/[0.05] transition-colors group"
+                 className="bg-[var(--surface)] border-l-2 border-[var(--border)] hover:border-[var(--accent)] p-8 shadow-xl transition-all duration-300 group hover:-translate-y-2"
                >
-                 <div className={`w-14 h-14 rounded-2xl ${err.bg} ${err.color} flex items-center justify-center mb-6 shadow-inner`}>
-                   <err.icon className="h-7 w-7" />
-                 </div>
-                 <h3 className="text-2xl font-display font-bold text-white mb-4">{err.title}</h3>
-                 <p className="text-zinc-400 font-light leading-relaxed">{err.desc}</p>
+                 <err.icon className="h-8 w-8 text-[var(--text-muted)] group-hover:text-[var(--accent)] mb-6 transition-colors" />
+                 <h3 className="text-2xl font-display font-bold text-[var(--text-primary)] mb-4">{err.title}</h3>
+                 <p className="text-[var(--text-secondary)] font-light leading-relaxed">{err.desc}</p>
                </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── SOLUTION / HOW IT WORKS (Interactive UI Demo) ────────────────────────── */}
-      <section id="como-funciona" className="py-32 bg-zinc-900/30 relative border-y border-white/5">
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1/3 h-1/2 bg-violet-600/10 blur-[150px] -z-10 rounded-full" />
+      {/* ── HOW IT WORKS - PIPELINE INTERATIVO ──────────────────────── */}
+      <section id="como-funciona" className="py-32 bg-[var(--surface)] relative border-y border-[var(--border)] z-20 overflow-hidden">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--accent)]/5 blur-[200px] rounded-full pointer-events-none" />
         
         <div className="container max-w-screen-xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-20 items-center">
-            <motion.div 
-              initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
-              className="space-y-10"
-            >
+            
+            <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-10">
               <div>
-                <Badge variant="outline" className="text-violet-400 border-violet-500/30 bg-violet-500/10 mb-6">Pipeline de Processamento</Badge>
-                <h2 className="text-4xl md:text-5xl font-display font-bold text-white leading-[1.1] mb-6">
-                  Transformando caos em <br/> <span className="text-gradient-primary">matrizes organizadas.</span>
+                <Badge variant="outline" className="text-[var(--accent)] border-[var(--border)] font-mono-data tracking-wide mb-6 bg-[var(--background)]">Pipeline de Processamento</Badge>
+                <h2 className="text-4xl md:text-5xl font-display font-bold text-[var(--text-primary)] leading-[1.1] mb-6">
+                  Transformando caos em <br/> <span className="text-[var(--accent)]">matrizes rastreáveis.</span>
                 </h2>
-                <p className="text-xl text-zinc-400 font-light">
-                  Uma arquitetura elaborada com filtros matemáticos em cascata. Sem adivinhação, sem IA inventando números.
+                <p className="text-xl text-[var(--text-secondary)] font-light">
+                  Zero IA generativa. Nenhuma "adivinhação". Cada decisão é mapeada e auditável com log de motivo.
                 </p>
               </div>
               
               <div className="space-y-8 pt-4">
                 {[
-                  { title: '1. O Upload Instantâneo', desc: 'Arraste o PDF de qualquer banco mapeado. O motor faz o fingerprint SHA-256 de segurança.' },
-                  { title: '2. Filtro em 8 Cascadas', desc: 'Nosso algoritmo exclui imediatamente débitos, estornos, autotransferências, apostas (BETs) e lavagens.' },
-                  { title: '3. Análise Final & Relatório', desc: 'Acompanhe na dashboard interativa. Obtenha a matriz real provada e exporte lindamente em PDF ou CSV.' }
+                  { title: 'Upload do PDF', desc: 'SHA-256 gerado automaticamente. Banco detectado naturalmente.' },
+                  { title: 'Classificação em 8 regras', desc: 'Filtra estornos, apostas (BETs), autotransferências e wash trading com precisão matemática.' },
+                  { title: 'Dashboard Interativa', desc: 'Acordeão mensal, toggles manuais e exportação blindada em PDF/CSV.' }
                 ].map((step, idx) => (
                   <div key={idx} className="flex gap-6 group">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-white/5 border border-white/10 text-white font-display font-bold flex items-center justify-center text-xl group-hover:bg-violet-600 group-hover:border-violet-500 transition-colors shadow-lg shadow-black/50">
-                      {idx + 1}
+                    <div className="flex-shrink-0 w-12 h-12 rounded-sm bg-[var(--background)] border border-[var(--border)] text-[var(--text-primary)] font-mono-data font-bold flex items-center justify-center text-xl group-hover:bg-[var(--accent)] group-hover:text-[var(--background)] group-hover:border-[var(--accent)] transition-all">
+                      0{idx + 1}
                     </div>
                     <div>
-                      <h4 className="text-xl font-display font-bold text-white mb-2 group-hover:text-violet-300 transition-colors">{step.title.substring(3)}</h4>
-                      <p className="text-zinc-400 font-light leading-relaxed">{step.desc}</p>
+                      <h4 className="text-xl font-display font-bold text-[var(--text-primary)] mb-2 group-hover:text-[var(--accent)] transition-colors">{step.title}</h4>
+                      <p className="text-[var(--text-secondary)] font-light leading-relaxed">{step.desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </motion.div>
 
-            {/* Interactive Dashboard Mockup */}
+            {/* Demo Card (Animated) */}
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, rotateY: 10 }} 
-              whileInView={{ opacity: 1, scale: 1, rotateY: 0 }} 
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, type: "spring" }}
-              className="relative perspective-1000"
+              initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
+              className="relative p-1 rounded-sm bg-gradient-to-br from-[var(--border)] to-transparent"
             >
-              <div className="glass-panel p-2 rounded-[2.5rem] shadow-2xl shadow-black/50 border border-white/10 ring-1 ring-white/5 relative z-10 bg-zinc-950/50">
-                <div className="border border-white/10 bg-[#0a0a0a] rounded-[2rem] overflow-hidden">
-                  {/* Fake UI Header */}
-                  <div className="h-14 border-b border-white/10 flex items-center px-6 gap-3 bg-white/[0.02]">
-                    <div className="flex gap-2">
-                       <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                       <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-                       <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                    </div>
-                    <div className="ml-auto flex items-center gap-3">
-                       <Badge variant="outline" className="text-xs bg-violet-500/10 text-violet-400 border-violet-500/20">Processado</Badge>
-                       <Download className="w-4 h-4 text-zinc-500" />
-                    </div>
-                  </div>
-                  
-                  {/* Fake UI Body */}
-                  <div className="p-8 space-y-6">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-sm font-medium text-zinc-500 mb-1">Renda Total Apurada</p>
-                        <h3 className="text-4xl font-display font-bold text-white">R$ 38.540<span className="text-zinc-500 text-2xl">,00</span></h3>
-                      </div>
-                      <div className="h-12 w-32 bg-gradient-to-t from-violet-500/20 to-transparent rounded-t-xl border-b-2 border-violet-500 relative flex items-end justify-around px-2 pb-1">
-                        <div className="w-2 h-[40%] bg-violet-500 rounded-t-sm"></div>
-                        <div className="w-2 h-[60%] bg-violet-500 rounded-t-sm"></div>
-                        <div className="w-2 h-[30%] bg-violet-500 rounded-t-sm"></div>
-                        <div className="w-2 h-[80%] bg-violet-500 rounded-t-sm"></div>
-                        <div className="w-2 h-[100%] bg-violet-400 rounded-t-sm shadow-[0_0_10px_rgba(139,92,246,0.8)]"></div>
-                      </div>
-                    </div>
+              <div className="bg-[var(--background)] p-6 space-y-4 shadow-2xl relative overflow-hidden">
+                 
+                 <div className="flex items-center gap-3 border-b border-[var(--border)] pb-4 mb-6">
+                    <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
+                    <span className="font-mono-data text-sm text-[var(--text-secondary)] uppercase tracking-wider">Processando 03/2025</span>
+                 </div>
 
-                    <div className="space-y-3 pt-4">
-                      {[
-                        { icon: TrendingUp, title: "PIX SALÁRIO — STARTUP LTDA", val: "+ R$ 12.000,00", color: "text-emerald-400", bg: "bg-emerald-400/10" },
-                        { icon: Shield, title: "Autotransferência — Nubank", val: "R$ 5.500,00", color: "text-zinc-500", style: "line-through opacity-50", bg: "bg-zinc-800" },
-                        { icon: AlertTriangle, title: "PIX BETANO JOGOS LTDA", val: "R$ 1.500,00", color: "text-amber-500", style: "line-through opacity-50", bg: "bg-amber-500/10" }
-                      ].map((item, i) => (
-                        <div key={i} className={`flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/[0.02] ${item.style || ''} transition-all hover:bg-white/[0.04]`}>
-                          <div className={`p-2 rounded-lg ${item.bg}`}>
-                            <item.icon className={`w-4 h-4 ${item.color.replace('text-', 'text-')}`} />
-                          </div>
-                          <span className="text-sm font-medium text-zinc-300 flex-1">{item.title}</span>
-                          <span className={`text-sm font-bold ${item.color}`}>{item.val}</span>
+                 {/* Simulated transactions streaming in */}
+                 <div className="space-y-3 font-mono-data text-xs sm:text-sm">
+                   {[
+                     { status: '✓', text: 'PIX RECEBIDO - EMPRESA ALFA LTDA', val: '+R$8.500', color: 'text-[var(--green)]', delay: '0s' },
+                     { status: '✓', text: 'SALÁRIO MARÇO/2025', val: '+R$4.200', color: 'text-[var(--green)]', delay: '0.8s' },
+                     { status: '✕', text: 'TRANSFERÊNCIA PARA CONTA PRÓPRIA', val: '-R$2.000', color: 'text-[var(--red)]', delay: '1.6s' },
+                     { status: '✕', text: 'BETANO APOSTAS ONLINE', val: '+R$300', color: 'text-[var(--red)]', delay: '2.4s' },
+                     { status: '⚠', text: 'PIX - MARIA SILVA (VÍNCULO?)', val: '+R$1.500', color: 'text-[#F39C12]', delay: '3.2s' },
+                   ].map((item, i) => (
+                     <div key={i} className="flex items-center justify-between border-b border-[var(--border)] pb-2 opacity-0 animate-transaction-slide" style={{ animationDelay: item.delay }}>
+                        <div className="flex gap-3">
+                           <span className={item.color}>{item.status}</span>
+                           <span className="text-[var(--text-primary)]">{item.text}</span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                        <span className={item.color}>{item.val}</span>
+                     </div>
+                   ))}
+                 </div>
+
+                 <div className="mt-8 p-4 bg-[var(--surface-alt)] border border-[var(--border)] flex justify-between items-center opacity-0 animate-transaction-slide" style={{ animationDelay: '4s' }}>
+                    <span className="font-display font-medium text-[var(--text-secondary)]">Renda Apurada:</span>
+                    <span className="font-mono-data text-lg font-bold text-[var(--accent)]">R$ 14.200,00</span>
+                 </div>
+
               </div>
-              
-              {/* Decorative elements behind the mockup */}
-              <div className="absolute -bottom-10 -right-10 w-full h-full bg-violet-600/20 blur-3xl rounded-full -z-20"></div>
             </motion.div>
+
           </div>
         </div>
       </section>
 
-      {/* ── PRICING SAAS (Premium Vibe) ────────────────────── */}
-      <section id="pricing" className="py-32 relative">
-        <div className="absolute left-0 top-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
-        
+      {/* ── FEATURES GRID ────────────────────────────── */}
+      <section id="features" className="py-32 relative z-20 bg-[var(--background)]">
         <div className="container max-w-screen-xl mx-auto px-6">
-          <motion.div 
-            initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp}
-            className="text-center mb-16 space-y-6 max-w-3xl mx-auto"
-          >
-            <h2 className="text-4xl md:text-6xl font-display font-bold text-white tracking-tight">
-              Investimento Único.<br/>
-              <span className="text-gradient-primary">Retorno Absoluto.</span>
-            </h2>
-            <p className="text-xl text-zinc-400 font-light">
-              Assinatura fixa, sem limite de páginas por PDF ou tarifas escondidas.
-            </p>
-          </motion.div>
+           <div className="text-center mb-20 max-w-3xl mx-auto">
+             <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-[var(--text-primary)] mb-6">Auditoria Levada a Sério</h2>
+             <p className="text-xl text-[var(--text-secondary)] font-light">Ferramentas desenhadas com absoluto rigor técnico e legal.</p>
+           </div>
+           
+           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { n: '01', title: '15+ Bancos Mapeados', desc: 'Atende Itaú, Bradesco, Nubank, C6, etc. Modelos revisados a cada mudança de layout bancário.' },
+                { n: '02', title: 'OCR Nativo Integrado', desc: 'Documentos escaneados e tortos? O Tesseract integrado extrai strings sem precisar digitar nada.' },
+                { n: '03', title: 'Motor Determinístico', desc: '100% auditável. Sem heurísticas, sem "alucinações" de IA gen. O resultado é exato e repetível.' },
+                { n: '04', title: 'Deduplicação de Logs', desc: 'Fingerprint criptográfico do hash PDF previne que clientes submetam a mesma fatura repetida.' },
+                { n: '05', title: 'Anti Wash Trading', desc: 'Filtra loops financeiros no mesmo dia (depositar e sacar do próprio CPF) que inflam limites fictícios.' },
+                { n: '06', title: 'Exportação Blindada', desc: 'Gerador de PDF nativo com matriz comprovada, ou relatórios CSV cru para análises externas.' },
+              ].map((ft, i) => (
+                <div key={i} className="bg-[var(--surface)] p-8 border border-[var(--border)] hover:border-[var(--accent)]/50 transition-colors group">
+                    <span className="font-mono-data text-3xl font-bold text-[var(--accent)] opacity-50 group-hover:opacity-100 transition-opacity mb-6 block">{ft.n}</span>
+                    <h4 className="font-display font-bold text-xl text-[var(--text-primary)] mb-3">{ft.title}</h4>
+                    <p className="text-[var(--text-secondary)] font-light leading-relaxed">{ft.desc}</p>
+                </div>
+              ))}
+           </div>
+        </div>
+      </section>
 
-          <div className="flex justify-center mb-16 relative z-20">
-            <div className="glass-panel p-1.5 rounded-full inline-flex items-center shadow-lg">
-              <button 
-                onClick={() => setIsAnnual(false)}
-                className={cn("px-8 py-3 rounded-full text-sm font-semibold transition-all duration-300", 
-                  !isAnnual ? 'bg-white text-black shadow-md' : 'text-zinc-400 hover:text-white')}
-              >
-                Mensal
-              </button>
-              <button 
-                onClick={() => setIsAnnual(true)}
-                className={cn("px-8 py-3 rounded-full text-sm font-semibold transition-all duration-300 flex items-center gap-2", 
-                  isAnnual ? 'bg-white text-black shadow-md' : 'text-zinc-400 hover:text-white')}
-              >
-                Anual 
-                <span className={cn("text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold", isAnnual ? "bg-black/10 text-black" : "bg-violet-500/20 text-violet-300")}>
-                  -16%
-                </span>
-              </button>
-            </div>
+      {/* ── METRICS / PROVA SOCIAL ────────────────────────────── */}
+      <section className="py-24 bg-[var(--surface-alt)] border-y border-[var(--border)] relative z-20">
+        <div className="container max-w-screen-xl mx-auto px-6">
+           <div className="grid md:grid-cols-3 gap-12 divide-y md:divide-y-0 md:divide-x divide-[var(--border)] text-center">
+              {[
+                { v: '35h', label: 'Salvas por auditor' },
+                { v: '99,9%', label: 'Precisão comprovada' },
+                { v: '15+', label: 'Bancos suportados' }
+              ].map((m, i) => (
+                 <div key={i} className="pt-8 md:pt-0 flex flex-col items-center justify-center">
+                    <span className="font-mono-data text-6xl md:text-7xl font-bold text-[var(--accent)] mb-4">{m.v}</span>
+                    <span className="font-display text-lg text-[var(--text-secondary)] uppercase tracking-widest">{m.label}</span>
+                 </div>
+              ))}
+           </div>
+           
+           <div className="mt-20 max-w-4xl mx-auto text-center border border-[var(--border)] p-10 bg-[var(--background)] relative">
+              <span className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[var(--surface-alt)] px-4 font-mono-data text-[var(--accent)]">DEPOIMENTO</span>
+              <p className="text-2xl md:text-3xl font-light font-display italic text-[var(--text-primary)] leading-relaxed">
+                "O fluxo que costumava me custar finais de semana inteiros com calculadoras e planilhas, 
+                agora é feito em menos de 10 segundos com precisão inquestionável."
+              </p>
+           </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ────────────────────────────────────── */}
+      <section id="pricing" className="py-32 bg-[var(--background)] relative z-20">
+        <div className="container max-w-screen-xl mx-auto px-6">
+          <div className="text-center mb-20 max-w-3xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-[var(--text-primary)] tracking-tight">Planos Clássicos</h2>
+            <p className="text-xl text-[var(--text-secondary)] mt-4 font-light">
+              Assinatura fixa, escalabilidade ilimitada.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch place-items-stretch">
-            
-            {/* PLANO STANDARD */}
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="h-full">
-              <Card className="p-10 border-white/10 bg-zinc-900/50 backdrop-blur-xl rounded-[2.5rem] shadow-none hover:bg-zinc-800/50 transition-colors h-full flex flex-col relative overflow-hidden group text-white">
-                <div className="absolute top-0 left-0 w-full h-1 bg-zinc-800 group-hover:bg-zinc-700 transition-colors"></div>
-                <div>
-                  <h3 className="text-xl font-display font-bold text-zinc-300 mb-2">Plano Essencial</h3>
-                  <p className="text-zinc-500 font-light mb-8 h-12">Otimize a análise de contratos menores com precisão.</p>
-                  
-                  <div className="mb-10 relative h-16">
-                    <motion.div 
-                      key={isAnnual ? 'anual_std' : 'mensal_std'}
-                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-                      className="absolute inset-x-0 flex items-baseline gap-1"
-                    >
-                      <span className="text-2xl font-bold text-zinc-500">R$</span>
-                      <span className="text-6xl font-display font-bold text-white tracking-tighter">
-                        {isAnnual ? '499' : '49'}
-                      </span>
-                      <span className="text-lg font-bold text-white">,90</span>
-                      <span className="text-zinc-500 font-medium ml-2">/{isAnnual ? 'ano' : 'mês'}</span>
-                    </motion.div>
-                  </div>
-                  
-                  <ul className="space-y-4 mb-10">
-                    {['Apurações ilimitadas', 'Motor OCR 3.0', 'Filtro em 8 regras', 'Exportação em PDF'].map((feature, i) => (
-                      <li key={i} className="flex items-center gap-4 text-zinc-300">
-                        <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center shrink-0">
-                           <CheckCircle2 className="w-4 h-4 text-zinc-400" />
-                        </div>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <Button onClick={handleCTA} variant="outline" className="mt-auto w-full h-14 rounded-2xl text-base font-bold border-white/20 bg-transparent hover:bg-white hover:text-black transition-all">
-                  Começar Plano Essencial
-                </Button>
-              </Card>
-            </motion.div>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+            {/* Standard */}
+            <Card className="bg-[var(--surface)] border-[var(--border)] rounded-sm p-10 flex flex-col relative text-[var(--text-primary)]">
+               <h3 className="font-display font-bold text-2xl text-[var(--text-primary)]">Essencial</h3>
+               <p className="text-[var(--text-secondary)] mt-2 h-12">Análise de extratos para operações menores.</p>
+               <div className="my-8">
+                  <span className="font-mono-data text-xl text-[var(--text-secondary)]">R$ </span>
+                  <span className="font-mono-data text-5xl font-bold">499,90</span>
+                  <span className="text-[var(--text-secondary)]"> /ano</span>
+               </div>
+               <ul className="space-y-4 mb-10 text-[var(--text-secondary)] flex-1">
+                  {['Apurações ilimitadas', 'Motor OCR 3.0', 'Exportação PDF'].map((item, i) => (
+                    <li key={i} className="flex gap-3 items-center">
+                       <CheckCircle2 className="w-5 h-5 text-[var(--text-muted)]" /> {item}
+                    </li>
+                  ))}
+               </ul>
+               <Button onClick={handleCTA} variant="outline" className="w-full h-14 rounded-sm border-[var(--border)] bg-transparent hover:bg-[var(--surface-alt)] font-bold text-base transition-colors">
+                  Assinar Essencial
+               </Button>
+            </Card>
 
-            {/* PLANO PREMIUM (Destaque) */}
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="h-full">
-              <Card className="p-10 border-violet-500/50 bg-violet-950/20 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-violet-900/20 relative h-full flex flex-col overflow-hidden text-white group">
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-600/10 to-transparent pointer-events-none"></div>
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-indigo-500"></div>
-                
-                <div className="absolute top-0 right-0 p-8">
-                    <Badge className="bg-violet-600 text-white font-bold tracking-widest uppercase px-4 py-1.5 shadow-lg shadow-violet-600/30 font-display">Mais Popular</Badge>
-                </div>
+            {/* Premium */}
+            <Card className="bg-[var(--surface-alt)] border-[var(--accent)]/50 rounded-sm p-10 flex flex-col relative text-[var(--text-primary)] shadow-[0_0_30px_rgba(200,169,110,0.05)]">
+               <Badge className="absolute top-0 right-8 -translate-y-1/2 bg-[var(--accent)] text-[var(--background)] font-display font-bold tracking-widest uppercase hover:bg-[var(--accent)] pt-1 pb-1">
+                  Mais Requisitado
+               </Badge>
+               <h3 className="font-display font-bold text-2xl text-[var(--accent)] flex items-center gap-2">Premium Workstation</h3>
+               <p className="text-[var(--text-secondary)] mt-2 h-12">Performance extrema e fluxos ilimitados para auditorias pesadas.</p>
+               <div className="my-8">
+                  <span className="font-mono-data text-xl text-[var(--accent)]">R$ </span>
+                  <span className="font-mono-data text-5xl font-bold">49,90</span>
+                  <span className="text-[var(--text-secondary)]"> /mês</span>
+               </div>
+               <ul className="space-y-4 mb-10 text-[var(--text-primary)] flex-1">
+                  {['Tudo no plano Essencial', 'Suporte Prioritário VIP', 'Exportação Inteligente: PDF + CSV', 'Update garantido de mapas'].map((item, i) => (
+                    <li key={i} className="flex gap-3 items-center">
+                       <CheckCircle2 className="w-5 h-5 text-[var(--accent)]" /> {item}
+                    </li>
+                  ))}
+               </ul>
+               <Button onClick={handleCTA} className="w-full h-14 rounded-sm bg-[var(--accent)] hover:bg-[#D4B881] text-[var(--background)] font-bold text-base shadow-[0_0_15px_var(--accent-glow)] transition-all">
+                  Iniciar Teste de 7 Dias
+               </Button>
+            </Card>
+          </div>
 
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-2">
-                     <Star className="w-6 h-6 text-violet-400 fill-violet-400" />
-                     <h3 className="text-xl font-display font-bold text-white">Premium Workstation</h3>
-                  </div>
-                  <p className="text-violet-200/70 font-light mb-8 h-12 pr-20">Fluxo ilimitado, suporte prioritário e relatórios detalhados.</p>
-                  
-                  <div className="mb-10 relative h-16">
-                     <motion.div 
-                      key={isAnnual ? 'anual_prm' : 'mensal_prm'}
-                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-                      className="absolute inset-x-0 flex items-baseline gap-1"
-                     >
-                      <span className="text-2xl font-bold text-violet-400">R$</span>
-                      <span className="text-6xl font-display font-bold text-white tracking-tighter">
-                        {isAnnual ? '499' : '49'}
-                      </span>
-                      <span className="text-lg font-bold text-white">,90</span>
-                      <span className="text-violet-300/60 font-medium ml-2">/{isAnnual ? 'ano' : 'mês'}</span>
-                     </motion.div>
-                  </div>
-                  
-                  <ul className="space-y-4 mb-10">
-                    {['7 Dias de Teste Grátis (Cartão não exigido)', 'PDFs sem limite de páginas', 'Suporte Prioritário VIP', 'Exportação Inteligente: PDF + CSV', 'Update garantido aos novos mapas'].map((feature, i) => (
-                      <li key={i} className="flex items-center gap-4 text-white">
-                        <div className="w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center shrink-0 shadow-lg shadow-violet-600/30">
-                           <CheckCircle2 className="w-4 h-4 text-white" />
-                        </div>
-                        <span className="font-medium">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-auto relative z-10">
-                  <Button onClick={handleCTA} className="w-full h-14 rounded-2xl text-base font-bold bg-white text-black hover:bg-zinc-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-[0.98]">
-                    Iniciar Teste Grátis de 7 Dias
-                  </Button>
-                  <p className="text-center text-xs text-violet-300/50 mt-4 font-medium uppercase tracking-widest">
-                    Acesso Imediato
-                  </p>
-                </div>
-              </Card>
-            </motion.div>
+          <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 font-mono-data text-sm text-[var(--text-secondary)]">
+             <span className="flex items-center gap-2"><LockIcon className="w-4 h-4" /> Via Stripe</span>
+             <span className="flex items-center gap-2 text-[var(--green)]"><CheckCircle2 className="w-4 h-4" /> 7 Dias Grátis</span>
+             <span>Cancele Quando Quiser</span>
           </div>
         </div>
       </section>
 
       {/* ── CTA FINAL ────────────────────────────────────── */}
-      <section className="py-24 relative overflow-hidden border-t border-white/5 bg-zinc-950">
-        <div className="absolute inset-0 bg-gradient-to-t from-violet-900/20 to-transparent pointer-events-none" />
+      <section className="py-24 relative overflow-hidden bg-[var(--background)] border-t border-[var(--border)] z-20">
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--accent)]/5 to-transparent pointer-events-none" />
         <div className="container max-w-4xl mx-auto px-6 text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">Pronto para a nova era da auditoria?</h2>
-          <p className="text-xl text-zinc-400 font-light mb-10">Deixe os erros de lado e eleve o patamar de confiança das suas apurações agora.</p>
-          <Button onClick={handleCTA} className="h-16 rounded-full px-12 text-lg font-bold bg-violet-600 text-white hover:bg-violet-500 shadow-xl shadow-violet-600/20 transition-all hover:scale-105">
-            Abrir Hokma Workstation
-          </Button>
+          <h2 className="text-4xl md:text-5xl font-display font-bold text-[var(--text-primary)] mb-6">Pronto para a nova era da auditoria?</h2>
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
+            <Button onClick={handleCTA} className="h-14 rounded-sm px-10 text-base font-bold bg-[var(--accent)] text-[var(--background)] hover:bg-[#D4B881] shadow-[0_0_20px_var(--accent-glow)] transition-all">
+              Começar 7 Dias Grátis
+            </Button>
+            <Button variant="outline" className="h-14 rounded-sm px-10 text-base font-bold border-[var(--border)] bg-transparent hover:bg-[var(--surface-alt)]">
+              Falar com a equipe
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* ── FOOTER SAAS ────────────────────────────────────── */}
-      <footer className="bg-[#030303] py-16 border-t border-white/10 relative z-10">
+      {/* ── FOOTER ────────────────────────────────────── */}
+      <footer className="bg-[var(--surface)] py-12 border-t border-[var(--border)] relative z-20">
         <div className="container max-w-screen-xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-             <Hexagon className="w-6 h-6 text-violet-500" />
-             <span className="font-bold text-lg tracking-tight text-white font-display">Hokma Tech</span>
+             <Hexagon className="w-5 h-5 text-[var(--accent)] fill-current" />
+             <span className="font-display font-bold text-lg tracking-tight text-[var(--text-primary)]">HOKMA</span>
           </div>
-          <div className="flex gap-8 text-sm font-medium text-zinc-500">
-            <a href="#" className="hover:text-white transition-colors">Termos</a>
-            <a href="#" className="hover:text-white transition-colors">Privacidade</a>
-            <a href="mailto:contato@hokma.app" className="hover:text-white transition-colors">Exigir Suporte</a>
+          <div className="flex gap-8 text-sm font-medium text-[var(--text-secondary)]">
+            <a href="#" className="hover:text-[var(--accent)] transition-colors">Termos</a>
+            <a href="#" className="hover:text-[var(--accent)] transition-colors">Privacidade</a>
+            <a href="mailto:contato@hokma.app" className="hover:text-[var(--accent)] transition-colors">Suporte</a>
           </div>
-          <p className="text-sm text-zinc-600 font-light">© {new Date().getFullYear()} Hokma Solutions.</p>
+          <p className="font-mono-data text-xs text-[var(--text-muted)]">© {new Date().getFullYear()} Hokma Fintech.</p>
         </div>
       </footer>
-
     </div>
   );
 }
