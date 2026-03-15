@@ -232,11 +232,101 @@ export default function HokmaLanding() {
               </Button>
           </motion.div>
 
-          <motion.div variants={fadeUp} className="mt-16 flex flex-wrap items-center justify-center gap-8 md:gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-             <p className="text-sm font-semibold tracking-widest uppercase text-zinc-500 w-full mb-2">Bancos Suportados</p>
-             {['Nubank', 'Itaú', 'Bradesco', 'Caixa', 'Santander', 'Inter'].map((b) => (
-               <span key={b} className="text-xl font-display font-bold text-zinc-400">{b}</span>
-             ))}
+          <motion.div variants={fadeUp} className="mt-16 w-full max-w-5xl mx-auto overflow-hidden relative">
+             <p className="text-sm font-semibold tracking-widest uppercase text-zinc-500 text-center w-full mb-6">Bancos Suportados</p>
+             
+             {/* Gradient Masks for Marquee */}
+             <div className="absolute left-0 top-0 bottom-0 w-24 z-10 bg-gradient-to-r from-[#050505] to-transparent pointer-events-none"></div>
+             <div className="absolute right-0 top-0 bottom-0 w-24 z-10 bg-gradient-to-l from-[#050505] to-transparent pointer-events-none"></div>
+
+             <div className="flex gap-12 items-center w-max animate-[scroll_40s_linear_infinite] hover:[animation-play-state:paused] opacity-70 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
+               {/* 
+                 Duplicated list for infinite scroll effect 
+                 Included requested banks: MERCADO PAGO, NUBANK, INTER, CAIXA, BANCO DO BRASIL, BRADESCO, INFINITE PAY, ITAU, PAGBANK, NEXT, C6BANK, NEON, PICPAY, SANTANDER
+               */}
+               {[...Array(2)].map((_, arrayIndex) => (
+                 <div key={arrayIndex} className="flex gap-12 items-center">
+                   
+                   {/* Nubank */}
+                   <div className="flex items-center gap-2 font-display font-bold text-2xl tracking-tighter text-[#8A05BE]">
+                     <svg viewBox="0 0 24 24" className="w-8 h-8 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.48 14.5L7 13l1.41-1.41L10.52 13.7l6.07-6.07L18 9l-7.48 7.5z"/></svg>
+                     Nubank
+                   </div>
+
+                   {/* Itaú */}
+                   <div className="flex items-center gap-2 font-display font-black text-2xl italic tracking-tighter text-[#EC7000]">
+                     Itaú
+                   </div>
+
+                   {/* Bradesco */}
+                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#CC092F]">
+                     <div className="w-6 h-6 bg-[#CC092F] rounded-sm transform rotate-45 flex items-center justify-center">
+                       <div className="w-3 h-3 bg-white rounded-full"></div>
+                     </div>
+                     Bradesco
+                   </div>
+
+                   {/* Caixa */}
+                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#185E9C] tracking-tight">
+                     <span className="text-[#F39200]">CAIXA</span>
+                   </div>
+
+                   {/* Banco do Brasil */}
+                   <div className="flex items-center gap-2 font-display font-bold text-xl text-[#F8D117]">
+                     <div className="w-6 h-6 bg-[#003da5] flex items-center justify-center font-serif text-[#F8D117]">BB</div>
+                     Banco do Brasil
+                   </div>
+
+                   {/* Inter */}
+                   <div className="flex items-center gap-2 font-display font-black text-2xl text-[#FF7A00] tracking-tighter">
+                     inter
+                   </div>
+
+                   {/* Mercado Pago */}
+                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#009EE3]">
+                     <svg viewBox="0 0 24 24" className="w-8 h-8 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+                     Mercado Pago
+                   </div>
+
+                   {/* PagBank */}
+                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#90c53e]">
+                     Pag<span className="text-white">Bank</span>
+                   </div>
+
+                   {/* Next */}
+                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#00FF5F]">
+                     next
+                   </div>
+
+                   {/* C6 Bank */}
+                   <div className="flex items-center gap-2 font-display font-black text-2xl text-white">
+                     C6 Bank
+                   </div>
+
+                   {/* Neon */}
+                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#00E5FF]">
+                     neon
+                   </div>
+
+                   {/* PicPay */}
+                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#11C76F]">
+                     PicPay
+                   </div>
+
+                   {/* Santander */}
+                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-[#EC0000]">
+                      <svg viewBox="0 0 24 24" className="w-8 h-8 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+                      Santander
+                   </div>
+
+                   {/* InfinitePay */}
+                   <div className="flex items-center gap-2 font-display font-bold text-2xl text-white">
+                     <span className="text-[#000]">∞</span> InfinitePay
+                   </div>
+
+                 </div>
+               ))}
+             </div>
           </motion.div>
         </motion.div>
       </section>
