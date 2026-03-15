@@ -106,133 +106,128 @@ const HERO_IMAGES: string[] = Array.from({ length: 40 }, (_, i) => {
 const HERO_LABELS = ['Upload', '', '', '', 'Processando', '', '', '', '', 'Dashboard', '', '', '', '', 'Acordeão', '', '', '', '', 'Métricas', '', '', '', '', 'Exportar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];
 
 function HeroSequence({ isLoggedIn, onCTA }: { isLoggedIn: boolean; onCTA: () => void }) {
-  const wrapperRef = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
+  const [playing, setPlaying] = useState(true);
 
+  // Auto-play: 40 frames × 80ms = 3.2s per loop, runs continuously
   useEffect(() => {
-    const fn = () => {
-      if (!wrapperRef.current) return;
-      const rect = wrapperRef.current.getBoundingClientRect();
-      const h = wrapperRef.current.offsetHeight;
-      const p = Math.max(0, Math.min(1, (-rect.top) / (h - window.innerHeight)));
-      setIdx(Math.round(p * (HERO_IMAGES.length - 1)));
-    };
-    window.addEventListener('scroll', fn, { passive: true });
-    fn();
-    return () => window.removeEventListener('scroll', fn);
-  }, []);
+    if (!playing) return;
+    const timer = setInterval(() => {
+      setIdx(prev => (prev + 1) % HERO_IMAGES.length);
+    }, 80);
+    return () => clearInterval(timer);
+  }, [playing]);
 
   return (
-    // 300vh: user scrolls 200vh → all 40 frames cycle = ~5vh per frame
-    <div ref={wrapperRef} style={{ height: '300vh' }}>
-      <div className="sticky top-0 h-screen overflow-hidden">
+    // Normal 100vh section — no sticky trap
+    <section className="relative h-screen overflow-hidden">
 
-        {/* ── BACKGROUND: 40-frame scroll animation ─────────────────── */}
-        <div className="absolute inset-0 z-0">
-          {HERO_IMAGES.map((src, i) => (
-            <motion.div
-              key={src}
-              animate={{ opacity: idx === i ? 1 : 0 }}
-              transition={{ duration: 0.15 }}   // fast crossfade for smooth animation
-              className="absolute inset-0"
-              style={{ pointerEvents: 'none' }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={src}
-                alt=""
-                className="w-full h-full object-cover object-center"
-                loading={i === 0 ? 'eager' : 'lazy'}
-              />
-            </motion.div>
-          ))}
-
-          {/* Dark overlay so text is always readable */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/30" />
-          {/* Bottom fade into the next section */}
-          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black to-transparent" />
-        </div>
-
-        {/* ── FOREGROUND: Text + CTAs ────────────────────────────────── */}
-        <div className="relative z-10 h-full flex items-center">
-          <div className="max-w-screen-xl mx-auto px-6 w-full pt-20">
-            <motion.div
-              initial="hidden" animate="visible" variants={stagger}
-              className="max-w-2xl flex flex-col items-start"
-            >
-              <motion.div variants={fadeUp}>
-                <Badge variant="outline" className="mb-6 px-4 py-1.5 rounded-full border-blue-500/40 bg-blue-500/10 text-blue-400 font-mono text-xs tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.2)] backdrop-blur-sm">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
-                  </span>
-                  Motor v3.0 · Determinístico
-                </Badge>
-              </motion.div>
-
-              <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.05] text-white mb-6 drop-shadow-2xl">
-                Apure rendimentos em{' '}
-                <span className="relative inline-block text-blue-400">
-                  segundos
-                  <span className="absolute -bottom-1 left-0 w-full h-1 bg-blue-500/40 rounded-full blur-sm" />
-                </span>, não em horas.
-              </motion.h1>
-
-              <motion.p variants={fadeUp} className="text-lg md:text-xl text-zinc-300 font-light leading-relaxed mb-10 max-w-xl drop-shadow">
-                A plataforma definitiva para auditores e correspondentes jurídicos.{' '}
-                <span className="text-white font-medium">Precisão de 99.9%</span>. Nenhuma IA adivinhando números.
-              </motion.p>
-
-              <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={onCTA}
-                  className="group flex items-center justify-center gap-2 px-8 py-4 text-base font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg shadow-blue-700/40 hover:shadow-blue-500/60 transition-all hover:-translate-y-0.5"
-                >
-                  {isLoggedIn ? 'Acessar Workspace' : 'Iniciar Teste de 7 Dias Grátis'}
-                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button
-                  onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 text-white rounded-full transition-all"
-                >
-                  Ver como funciona ↓
-                </button>
-              </motion.div>
-
-              {/* Bank marquee */}
-              <motion.div variants={fadeUp} className="mt-14 w-full max-w-[420px] overflow-hidden relative opacity-60 hover:opacity-100 transition-opacity duration-500">
-                <div className="absolute left-0 inset-y-0 w-12 z-10 bg-gradient-to-r from-black/70 to-transparent pointer-events-none" />
-                <div className="absolute right-0 inset-y-0 w-12 z-10 bg-gradient-to-l from-black/70 to-transparent pointer-events-none" />
-                <div className="flex gap-10 items-center animate-scroll whitespace-nowrap w-max">
-                  {[...Array(2)].flatMap((_, d) =>
-                    ['Nubank','Itaú','Bradesco','Caixa','Santander','Inter','Neon','C6 Bank'].map((b) => (
-                      <span key={`${d}-${b}`} className="font-bold text-sm text-zinc-300">{b}</span>
-                    ))
-                  )}
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Scroll progress bar at the bottom */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
-          <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
-            <motion.div
-              className="h-full bg-blue-500 rounded-full"
-              animate={{ width: `${((idx) / (HERO_IMAGES.length - 1)) * 100}%` }}
-              transition={{ duration: 0.1 }}
+      {/* ── BACKGROUND: auto-playing 40-frame animation ─────────────────── */}
+      <div className="absolute inset-0 z-0">
+        {HERO_IMAGES.map((src, i) => (
+          <motion.div
+            key={src}
+            animate={{ opacity: idx === i ? 1 : 0 }}
+            transition={{ duration: 0.06 }}
+            className="absolute inset-0"
+            style={{ pointerEvents: 'none' }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={src}
+              alt=""
+              className="w-full h-full object-cover object-center"
+              loading={i === 0 ? 'eager' : 'lazy'}
             />
-          </div>
-          <span className="font-mono text-xs text-white/40">
-            {Math.round((idx / (HERO_IMAGES.length - 1)) * 100)}%
-          </span>
-        </div>
+          </motion.div>
+        ))}
 
+        {/* Dark overlay — keeps text readable */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/25" />
+        {/* Fade at bottom into next section */}
+        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-black to-transparent" />
       </div>
-    </div>
+
+      {/* ── FOREGROUND: Text + CTAs ────────────────────────────────── */}
+      <div className="relative z-10 h-full flex items-center">
+        <div className="max-w-screen-xl mx-auto px-6 w-full pt-20">
+          <motion.div
+            initial="hidden" animate="visible" variants={stagger}
+            className="max-w-2xl flex flex-col items-start"
+          >
+            <motion.div variants={fadeUp}>
+              <Badge variant="outline" className="mb-6 px-4 py-1.5 rounded-full border-blue-500/40 bg-blue-500/10 text-blue-400 font-mono text-xs tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.2)] backdrop-blur-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+                </span>
+                Motor v3.0 · Determinístico
+              </Badge>
+            </motion.div>
+
+            <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.05] text-white mb-6 drop-shadow-2xl">
+              Apure rendimentos em{' '}
+              <span className="relative inline-block text-blue-400">
+                segundos
+                <span className="absolute -bottom-1 left-0 w-full h-1 bg-blue-500/40 rounded-full blur-sm" />
+              </span>, não em horas.
+            </motion.h1>
+
+            <motion.p variants={fadeUp} className="text-lg md:text-xl text-zinc-300 font-light leading-relaxed mb-10 max-w-xl drop-shadow">
+              A plataforma definitiva para auditores e correspondentes jurídicos.{' '}
+              <span className="text-white font-medium">Precisão de 99.9%</span>. Nenhuma IA adivinhando números.
+            </motion.p>
+
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={onCTA}
+                className="group flex items-center justify-center gap-2 px-8 py-4 text-base font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg shadow-blue-700/40 hover:shadow-blue-500/60 transition-all hover:-translate-y-0.5"
+              >
+                {isLoggedIn ? 'Acessar Workspace' : 'Iniciar Teste de 7 Dias Grátis'}
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button
+                onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
+                className="flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 text-white rounded-full transition-all"
+              >
+                Ver como funciona ↓
+              </button>
+            </motion.div>
+
+            {/* Bank marquee */}
+            <motion.div variants={fadeUp} className="mt-12 w-full max-w-[420px] overflow-hidden relative opacity-60 hover:opacity-100 transition-opacity duration-500">
+              <div className="absolute left-0 inset-y-0 w-12 z-10 bg-gradient-to-r from-black/70 to-transparent pointer-events-none" />
+              <div className="absolute right-0 inset-y-0 w-12 z-10 bg-gradient-to-l from-black/70 to-transparent pointer-events-none" />
+              <div className="flex gap-10 items-center animate-scroll whitespace-nowrap w-max">
+                {[...Array(2)].flatMap((_, d) =>
+                  ['Nubank','Itaú','Bradesco','Caixa','Santander','Inter','Neon','C6 Bank'].map((b) => (
+                    <span key={`${d}-${b}`} className="font-bold text-sm text-zinc-300">{b}</span>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Progress bar — shows counter progress 0→100% */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
+        <div className="w-36 h-1 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+          <motion.div
+            className="h-full bg-blue-500 rounded-full"
+            animate={{ width: `${(idx / (HERO_IMAGES.length - 1)) * 100}%` }}
+            transition={{ duration: 0.06 }}
+          />
+        </div>
+        <span className="font-mono text-xs text-white/50 tabular-nums w-8">
+          {Math.round((idx / (HERO_IMAGES.length - 1)) * 100)}%
+        </span>
+      </div>
+
+    </section>
   );
 }
+
 
 /* ─── Main Page ──────────────────────────────────────────────────────── */
 export default function HokmaLanding() {
