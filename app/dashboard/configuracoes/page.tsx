@@ -18,6 +18,7 @@ import {
   Loader2,
   AlertTriangle,
   Info,
+  Bell,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -357,6 +358,72 @@ function TabDocumentacao() {
   );
 }
 
+function TabNotificacoes() {
+  const [notifAcessos, setNotifAcessos] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('hokma_notif_acessos') !== 'false';
+  });
+  const [notifRelatorios, setNotifRelatorios] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('hokma_notif_relatorios') !== 'false';
+  });
+  const [notifSeguranca, setNotifSeguranca] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('hokma_notif_seguranca') !== 'false';
+  });
+
+  const salvarNotificacoes = () => {
+    localStorage.setItem('hokma_notif_acessos', String(notifAcessos));
+    localStorage.setItem('hokma_notif_relatorios', String(notifRelatorios));
+    localStorage.setItem('hokma_notif_seguranca', String(notifSeguranca));
+    toast.success('Preferências de notificação salvas!');
+  };
+
+  return (
+    <div className="space-y-6 max-w-xl">
+      <div>
+        <h3 className="font-semibold text-foreground mb-1">Preferências de Comunicação</h3>
+        <p className="text-sm text-muted-foreground">
+          Escolha como e quando você deseja receber alertas do sistema
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card/30">
+          <div className="space-y-0.5">
+            <Label className="text-base">Novos acessos</Label>
+            <p className="text-xs text-muted-foreground">Alertar quando minha conta for acessada em um novo navegador</p>
+          </div>
+          <Switch checked={notifAcessos} onCheckedChange={setNotifAcessos} />
+        </div>
+
+        <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card/30">
+          <div className="space-y-0.5">
+            <Label className="text-base">Relatórios semanais</Label>
+            <p className="text-xs text-muted-foreground">Receber um resumo das apurações realizadas na semana</p>
+          </div>
+          <Switch checked={notifRelatorios} onCheckedChange={setNotifRelatorios} />
+        </div>
+
+        <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card/30">
+          <div className="space-y-0.5">
+            <Label className="text-base">Alertas de segurança</Label>
+            <p className="text-xs text-muted-foreground">Notificações críticas sobre atualizações de senha e 2FA</p>
+          </div>
+          <Switch checked={notifSeguranca} onCheckedChange={setNotifSeguranca} />
+        </div>
+      </div>
+
+      <Separator />
+
+      <Button onClick={salvarNotificacoes} className="gap-2">
+        <Save className="h-4 w-4" />
+        Salvar preferências
+      </Button>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ConfiguracoesPage() {
@@ -391,6 +458,10 @@ export default function ConfiguracoesPage() {
               <Palette className="h-3.5 w-3.5" />
               Aparência
             </TabsTrigger>
+            <TabsTrigger value="notificacoes" className="gap-2 text-xs sm:text-sm">
+              <Bell className="h-3.5 w-3.5" />
+              Notificações
+            </TabsTrigger>
             <TabsTrigger value="documentacao" className="gap-2 text-xs sm:text-sm">
               <BookOpen className="h-3.5 w-3.5" />
               Documentação
@@ -405,6 +476,9 @@ export default function ConfiguracoesPage() {
           </TabsContent>
           <TabsContent value="aparencia">
             <TabAparencia />
+          </TabsContent>
+          <TabsContent value="notificacoes">
+            <TabNotificacoes />
           </TabsContent>
           <TabsContent value="documentacao">
             <TabDocumentacao />

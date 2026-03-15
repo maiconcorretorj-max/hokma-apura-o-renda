@@ -15,6 +15,7 @@ import { FiltersPanel } from '@/components/FiltersPanel';
 import { TransactionAccordion } from '@/components/TransactionAccordion';
 import { supabase, isSupabaseConfigured, getCurrentUserId } from '@/lib/supabaseClient';
 import { gerarPdfApuracao } from '@/lib/pdfExporter';
+import { exportarParaCSV } from '@/lib/csvExporter';
 import { Section } from '@/components/ui/section';
 
 export default function AnalysisPage() {
@@ -102,6 +103,21 @@ export default function AnalysisPage() {
       toast.error('Erro ao gerar PDF. Tente novamente.');
     }
   };
+  
+  const handleDownloadCsv = () => {
+    if (!result || !meta.nomeCliente) {
+      toast.error('Dados insuficientes para gerar o CSV.');
+      return;
+    }
+
+    try {
+      exportarParaCSV(result, meta.nomeCliente);
+      toast.success('CSV gerado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar CSV:', error);
+      toast.error('Erro ao gerar CSV. Tente novamente.');
+    }
+  };
 
   const totalTransacoesVisiveis = result.transacoes.filter(
     (t) => t.valor > 0 && t.classificacao !== 'ignorar_sem_keyword' && t.classificacao !== 'ignorar_estorno'
@@ -144,7 +160,16 @@ export default function AnalysisPage() {
               className="border-border/60 shadow-sm"
             >
               <Download className="h-4 w-4 mr-2" />
-              Obter PDF
+              PDF
+            </Button>
+            <Button
+              onClick={handleDownloadCsv}
+              variant="outline"
+              size="sm"
+              className="border-border/60 shadow-sm"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              CSV
             </Button>
             <Button
               onClick={handleSaveReport}
