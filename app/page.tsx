@@ -95,11 +95,15 @@ function NavBar({ isLoggedIn, onCTA, menuOpen, setMenuOpen }: {
 }
 
 /* ─── Hero Scroll Sequence ──────────────────────────────────────────── */
-const HERO_IMAGES = [
-  '/images/01-upload.png','/images/02-processando.png','/images/03-dashboard.png',
-  '/images/04-acordeao.png','/images/05-metricas.png','/images/06-export.png',
-];
-const HERO_LABELS = ['Upload', 'Processando', 'Dashboard', 'Acordeão', 'Métricas', 'Exportar'];
+/* ─── 40 hero frames ─────────────────────────────────────────────────── */
+// Frames are stored in public/images/ (ezgif-frame-001.png … 040.png)
+const HERO_IMAGES: string[] = Array.from({ length: 40 }, (_, i) => {
+  const n = String(i + 1).padStart(3, '0');
+  return `/images/ezgif-frame-${n}.png`;
+});
+
+// Labels shown on the step dots (every 5th frame gets a label)
+const HERO_LABELS = ['Upload', '', '', '', 'Processando', '', '', '', '', 'Dashboard', '', '', '', '', 'Acordeão', '', '', '', '', 'Métricas', '', '', '', '', 'Exportar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];
 
 function HeroSequence({ isLoggedIn, onCTA }: { isLoggedIn: boolean; onCTA: () => void }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -225,17 +229,21 @@ function HeroSequence({ isLoggedIn, onCTA }: { isLoggedIn: boolean; onCTA: () =>
               </div>
             </motion.div>
 
-            {/* Step dots */}
-            <div className="flex items-center gap-2.5 mt-5">
-              {HERO_IMAGES.map((_, i) => (
-                <motion.div
-                  key={i}
-                  animate={{ backgroundColor: idx === i ? '#3b82f6' : '#27272a', width: idx === i ? 24 : 8 }}
-                  transition={{ duration: 0.3 }}
-                  className="h-2 rounded-full"
-                  style={{ boxShadow: idx === i ? '0 0 10px rgba(59,130,246,0.6)' : 'none' }}
-                />
-              ))}
+            {/* Step progress dots — show milestone every ~5 frames */}
+            <div className="flex items-center gap-2 mt-5">
+              {Array.from({ length: 8 }, (_, i) => {
+                const mileIdx = Math.floor((i / 7) * (HERO_IMAGES.length - 1));
+                const isActive = idx >= mileIdx && (i === 7 || idx < Math.floor(((i + 1) / 7) * (HERO_IMAGES.length - 1)));
+                return (
+                  <motion.div
+                    key={i}
+                    animate={{ backgroundColor: isActive ? '#3b82f6' : '#27272a', width: isActive ? 24 : 8 }}
+                    transition={{ duration: 0.25 }}
+                    className="h-2 rounded-full"
+                    style={{ boxShadow: isActive ? '0 0 10px rgba(59,130,246,0.6)' : 'none' }}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
