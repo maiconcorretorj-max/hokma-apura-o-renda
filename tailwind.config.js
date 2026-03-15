@@ -78,6 +78,26 @@ module.exports = {
           from: { backgroundPosition: '-200% 0' },
           to: { backgroundPosition: '200% 0' },
         },
+        // marquee infinite scroll
+        scroll: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-50%)' },
+        },
+        // transaction demo card rows
+        'tx-slide': {
+          from: { opacity: '0', transform: 'translateX(-20px)' },
+          to: { opacity: '1', transform: 'translateX(0)' },
+        },
+        // subtle pulse glow for CTA
+        'glow-pulse': {
+          '0%, 100%': { boxShadow: '0 0 15px rgba(59,130,246,0.3)' },
+          '50%': { boxShadow: '0 0 35px rgba(59,130,246,0.7)' },
+        },
+        // counter up
+        'count-up': {
+          from: { opacity: '0', transform: 'translateY(20px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -85,6 +105,10 @@ module.exports = {
         'fade-in': 'fade-in 0.4s ease-out',
         'slide-in': 'slide-in 0.3s ease-out',
         shimmer: 'shimmer 2s linear infinite',
+        scroll: 'scroll 35s linear infinite',
+        'tx-slide': 'tx-slide 0.5s ease-out forwards',
+        'glow-pulse': 'glow-pulse 2.5s ease-in-out infinite',
+        'count-up': 'count-up 0.8s ease-out forwards',
       },
     },
   },
