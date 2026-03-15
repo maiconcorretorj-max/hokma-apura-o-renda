@@ -27,12 +27,22 @@ export function IncomeSummary({ metricas }: IncomeSummaryProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
       {cards.map((card, idx) => (
-        <Card key={idx} className={card.highlight ? 'border-primary/50 bg-primary/5 shadow-lg shadow-primary/5' : 'glass'}>
+        <Card 
+          key={idx} 
+          className={`animate-appear ${
+            card.highlight 
+              ? 'border-brand/30 bg-brand/5 shadow-md shadow-brand/5' 
+              : 'border-border/60 bg-card/60 shadow-sm'
+          }`}
+          style={{ animationDelay: `${idx * 100}ms` }}
+        >
           <CardContent className="p-6">
-            <p className="text-sm font-medium text-muted-foreground mb-1">{card.label}</p>
-            <p className={`text-2xl font-bold tracking-tight ${card.highlight ? 'gradient-text' : 'text-foreground'}`}>
+            <p className="text-[13px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">
+              {card.label}
+            </p>
+            <p className={`text-3xl font-extrabold tracking-tight ${card.highlight ? 'text-brand' : 'text-foreground'}`}>
               {formatCurrency(card.value)}
             </p>
           </CardContent>

@@ -26,41 +26,41 @@ export function TransactionRow({ tx, onToggle }: TransactionRowProps) {
 
   return (
     <div
-      className={`group flex items-center justify-between p-3 sm:p-4 hover:bg-muted/50 transition-colors border-b last:border-0 ${
-        !isActive ? 'opacity-60' : ''
+      className={`group flex items-center justify-between p-3 sm:p-4 hover:bg-muted/30 transition-colors border-b border-border/50 last:border-0 ${
+        !isActive ? 'opacity-60 bg-muted/10' : ''
       }`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 flex-1 min-w-0 pr-4">
-        <div className="w-[85px] shrink-0 text-sm tabular-nums text-muted-foreground font-medium">
+        <div className="w-[85px] shrink-0 text-sm tabular-nums text-muted-foreground font-semibold">
           {tx.data}
         </div>
         
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium truncate ${!isActive ? 'line-through text-muted-foreground' : ''}`}>
+          <p className={`text-[15px] font-medium truncate ${!isActive ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
             {tx.descricao}
           </p>
           <div className="flex items-center gap-2 mt-1 sm:hidden">
-            <span className={`text-sm font-semibold tabular-nums ${isActive ? 'text-primary' : ''}`}>
+            <span className={`text-sm font-semibold tabular-nums ${isActive ? 'text-brand' : ''}`}>
               {formatCurrency(tx.valor)}
             </span>
-            <Badge variant={config.variant} className="text-[10px] px-1.5 py-0">
+            <Badge variant={config.variant} className="text-[9px] px-1.5 py-0 uppercase tracking-widest font-bold">
               {config.label}
             </Badge>
           </div>
         </div>
 
         <div className="hidden sm:flex items-center gap-4 shrink-0 px-4">
-          <Badge variant={config.variant} className="text-[10px]">
+          <Badge variant={config.variant} className="text-[10px] uppercase tracking-widest font-bold">
             {config.label}
           </Badge>
           {tx.custom_tag === 'washtrading' && (
-            <Badge variant="destructive" className="text-[10px]">WASH TRADING</Badge>
+            <Badge variant="destructive" className="text-[10px] uppercase font-bold tracking-widest">WASH TRADING</Badge>
           )}
           {tx._excludedByKeyword && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <Badge variant="outline" className="text-[10px] border-destructive text-destructive">KEYWORD</Badge>
+                  <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest border-destructive/50 text-destructive">KEYWORD</Badge>
                 </TooltipTrigger>
                 <TooltipContent>Excluído por palavra-chave</TooltipContent>
               </Tooltip>
@@ -70,19 +70,19 @@ export function TransactionRow({ tx, onToggle }: TransactionRowProps) {
       </div>
 
       <div className="flex items-center gap-3 sm:gap-6 shrink-0">
-        <div className="hidden sm:block w-[100px] text-right">
-          <span className={`text-sm font-semibold tabular-nums ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+        <div className="hidden sm:block w-[110px] text-right">
+          <span className={`text-[15px] font-semibold tabular-nums tracking-tight ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
             {formatCurrency(tx.valor)}
           </span>
         </div>
-        <div className="flex items-center gap-2 pt-1 sm:pt-0">
-          <span className={`text-[10px] font-semibold uppercase tracking-wider ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+        <div className="flex items-center gap-2.5 pt-1 sm:pt-0">
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${isActive ? 'text-brand' : 'text-muted-foreground'}`}>
             {isActive ? 'INCLUÍDO' : 'IGNORADO'}
           </span>
           <Switch
             checked={isActive}
             onCheckedChange={() => onToggle(tx.id, isActive)}
-            className="data-[state=checked]:bg-primary"
+            className="data-[state=checked]:bg-brand"
             title={isActive ? "Ignorar transação" : "Considerar transação no cálculo"}
           />
         </div>
