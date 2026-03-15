@@ -208,22 +208,23 @@ function HeroSequence({ isLoggedIn, onCTA }: { isLoggedIn: boolean; onCTA: () =>
                 <span className="flex-1 text-center font-mono text-xs text-zinc-500">hokma.app/dashboard</span>
               </div>
 
-              {/* Sequence frames */}
-              <div className="relative h-[420px] bg-zinc-950 flex items-center justify-center overflow-hidden">
+              {/* Sequence frames — real images from public/images/ */}
+              <div className="relative h-[420px] bg-zinc-950 overflow-hidden">
                 {HERO_IMAGES.map((src, i) => (
                   <motion.div
                     key={src}
                     animate={{ opacity: idx === i ? 1 : 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="absolute inset-0 flex items-center justify-center"
+                    transition={{ duration: 0.25 }}
+                    className="absolute inset-0"
                     style={{ pointerEvents: idx === i ? 'auto' : 'none' }}
                   >
-                    {/* Placeholder until /images/ folder is populated */}
-                    <div className="w-full h-full border border-dashed border-white/10 flex flex-col items-center justify-center gap-3 text-zinc-600 p-8">
-                      <LayoutDashboard className="w-12 h-12 opacity-30" />
-                      <span className="font-mono text-sm">Frame {i + 1}: {HERO_LABELS[i]}</span>
-                      <span className="text-xs opacity-50">Coloque {src} em /public{src}</span>
-                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={src}
+                      alt={`Frame ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                    />
                   </motion.div>
                 ))}
               </div>
