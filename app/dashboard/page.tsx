@@ -2,26 +2,26 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { User, CreditCard, LogOut, Loader2 } from 'lucide-react';
+import { User, CreditCard, Loader2 } from 'lucide-react';
 import { UploadArea } from '@/components/UploadArea';
 import { ProcessingModal } from '@/components/ProcessingModal';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { extrairTextoPdf } from '@/lib/pdfExtractor';
 import { executarOcr } from '@/lib/ocrWorker';
 import { hashPdf } from '@/lib/hashPdf';
 import { useIncomeAnalysisPersistence } from '@/hooks/useIncomeAnalysisPersistence';
 import { useAuth } from '@/hooks/useAuth';
+import { useHistory } from '@/hooks/useHistory';
 import { toast } from 'sonner';
 
 export default function DashboardPage() {
-  const { user, loading, signOut } = useAuth(true);
+  const { user, loading } = useAuth(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [nomeCliente, setNomeCliente] = useState('');
   const [cpf, setCpf] = useState('');
   const { saveResult } = useIncomeAnalysisPersistence();
+  const { salvarApuracao } = useHistory();
   const router = useRouter();
 
   const [progressState, setProgressState] = useState({
@@ -41,16 +41,13 @@ export default function DashboardPage() {
     setProgressState({ percentual: 0, fase: 'Iniciando...', paginaAtual: 0, totalPaginas: 0 });
 
     try {
-      // 1. Hash SHA-256
       setProgressState({ percentual: 5, fase: 'Gerando hash SHA-256...', paginaAtual: 0, totalPaginas: 0 });
       const fileBuffer = await file.slice().arrayBuffer();
       const hash = await hashPdf(fileBuffer);
 
-      // 2. Extração via PDF.js por coordenadas Y/X
       setProgressState({ percentual: 10, fase: 'Extraindo texto do PDF...', paginaAtual: 0, totalPaginas: 0 });
       let texto = await extrairTextoPdf(file);
 
-      // 3. Fallback OCR para PDFs escaneados
       if (!texto || texto.trim().length < 50) {
         toast.info('PDF escaneado detectado. Iniciando OCR — isso pode levar alguns minutos...');
         texto = await executarOcr(file, (progresso) => {
@@ -61,18 +58,12 @@ export default function DashboardPage() {
             totalPaginas: progresso.total,
           });
         });
-
-        // Log para debug (remover depois)
-        console.log('📝 Texto extraído pelo OCR (primeiros 2000 caracteres):');
-        console.log(texto.substring(0, 2000));
-        console.log(`📏 Total de caracteres: ${texto.length}`);
       }
 
       if (!texto || texto.trim().length < 50) {
         throw new Error('Não foi possível extrair texto legível deste arquivo.');
       }
 
-      // 4. Motor de apuração
       setProgressState({ percentual: 90, fase: 'Processando motor de apuração...', paginaAtual: 0, totalPaginas: 0 });
       const response = await fetch('/api/apuracao', {
         method: 'POST',
@@ -100,7 +91,12 @@ export default function DashboardPage() {
         toast.success(`Extrato processado! ${result.transacoes.length} transações encontradas.`);
       }
 
+      // Salva na memória de sessão para a página de análise
       saveResult(result, { nomeCliente: nomeCliente.trim(), cpf: cpf.trim() });
+
+      // Salva no histórico do Supabase (best-effort, não bloqueia)
+      salvarApuracao(result, { nomeCliente: nomeCliente.trim(), cpf: cpf.trim() }).catch(() => {});
+
       router.push('/analysis');
     } catch (err) {
       console.error(err);
@@ -121,36 +117,14 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container max-w-screen-xl flex h-14 items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
-              <div className="w-3 h-3 rounded-sm bg-primary" />
-            </div>
-            <span className="font-bold text-sm">HOKMA</span>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[180px]">
-              {user?.email}
-            </span>
-            <Button variant="ghost" size="sm" onClick={signOut} className="text-muted-foreground">
-              <LogOut className="h-4 w-4 mr-1.5" />
-              Sair
-            </Button>
-          </div>
-        </div>
-      </header>
-
       {/* Background decoration */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
       </div>
 
-      <main className="container max-w-4xl mx-auto px-4 py-16">
-        <div className="text-center space-y-3 mb-12">
+      <main className="container max-w-4xl mx-auto px-4 py-12 md:py-16">
+        <div className="text-center space-y-3 mb-10">
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 text-xs font-medium text-primary">
             Motor v3.0.0 · Zero IA · 100% Determinístico
           </div>
