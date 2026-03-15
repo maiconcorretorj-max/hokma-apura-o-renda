@@ -81,6 +81,7 @@ export function useTransactionFilters(initialTransactions: Transacao[]) {
       divisao12Meses: Math.round(totalApurado / 12),
       maiorMes: valores.length > 0 ? Math.max(...valores) : 0,
       menorMes: valores.length > 0 ? Math.min(...valores) : 0,
+      mesesConsiderados,
     };
   }, [activeTransactions]);
 

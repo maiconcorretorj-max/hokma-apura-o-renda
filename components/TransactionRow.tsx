@@ -69,18 +69,21 @@ export function TransactionRow({ tx, onToggle }: TransactionRowProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-6 shrink-0">
+      <div className="flex items-center gap-3 sm:gap-6 shrink-0">
         <div className="hidden sm:block w-[100px] text-right">
           <span className={`text-sm font-semibold tabular-nums ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
             {formatCurrency(tx.valor)}
           </span>
         </div>
-        <div className="pt-1 sm:pt-0">
+        <div className="flex items-center gap-2 pt-1 sm:pt-0">
+          <span className={`text-[10px] font-semibold uppercase tracking-wider ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+            {isActive ? 'INCLUÍDO' : 'IGNORADO'}
+          </span>
           <Switch
             checked={isActive}
             onCheckedChange={() => onToggle(tx.id, isActive)}
             className="data-[state=checked]:bg-primary"
-            title={isActive ? "Desativar transação" : "Ativar transação"}
+            title={isActive ? "Ignorar transação" : "Considerar transação no cálculo"}
           />
         </div>
       </div>

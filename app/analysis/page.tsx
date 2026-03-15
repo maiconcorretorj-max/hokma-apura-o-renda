@@ -63,7 +63,7 @@ export default function AnalysisPage() {
         divisao_12: filters.metricas.divisao12Meses,
         maior_mes: filters.metricas.maiorMes,
         menor_mes: filters.metricas.menorMes,
-        meses_considerados: result.mesesConsiderados,
+        meses_considerados: filters.metricas.mesesConsiderados || result.mesesConsiderados,
         transacoes_json: filters.transactions,
         versao_algoritmo: result.versaoAlgoritmo,
         timestamp_processamento: result.timestamp,
@@ -174,7 +174,7 @@ export default function AnalysisPage() {
             )}
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span>{result.mesesConsiderados} {result.mesesConsiderados === 1 ? 'mês' : 'meses'} analisados</span>
+            <span>{filters.metricas.mesesConsiderados || result.mesesConsiderados} {(filters.metricas.mesesConsiderados || result.mesesConsiderados) === 1 ? 'mês' : 'meses'} analisados</span>
             <span>·</span>
             <span>{totalTransacoesVisiveis} transações revisáveis</span>
           </div>

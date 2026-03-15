@@ -62,11 +62,11 @@ export async function executarOcr(
   const resultados: string[] = new Array(numPages).fill('');
   let paginasProcessadas = 0;
 
-  // Processar uma página com escala 1.8x (rápido e qualidade suficiente)
+  // Processar uma página com escala 2.5x (alta qualidade para melhor acurácia OCR)
   const processarPagina = async (pageNum: number, workerIndex: number) => {
     const page = await pdf.getPage(pageNum);
-    // 1.8x: 30% mais rápido que 2.5x, mantendo legibilidade para OCR
-    const viewport = page.getViewport({ scale: 1.8 });
+    // 2.5x: necessário para máxima legibilidade de extratos pequenos
+    const viewport = page.getViewport({ scale: 2.5 });
 
     const canvas = document.createElement('canvas');
     canvas.width = viewport.width;
