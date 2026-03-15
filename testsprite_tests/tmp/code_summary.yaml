@@ -1,0 +1,13 @@
+tech_stacks:
+  - Next.js 14
+  - React
+  - TypeScript
+  - Tailwind CSS
+  - Supabase (Auth & Database)
+features:
+  - User authentication and settings
+  - File upload (PDF bank statements)
+  - PDF parsing (Mercado Pago, Caixa, Neon, Revolut, PicPay)
+  - Income calculation based on credit transactions
+  - Deterministic and auditable analysis results
+  - Dashboard and result visualization
