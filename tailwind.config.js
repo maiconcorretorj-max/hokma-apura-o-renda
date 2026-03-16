@@ -119,6 +119,7 @@ module.exports = {
         'slide-in': 'slide-in 0.3s ease-out',
         shimmer: 'shimmer 2s linear infinite',
         scroll: 'scroll 35s linear infinite',
+        'scroll-slow': 'scroll 120s linear infinite',
         'tx-slide': 'tx-slide 0.5s ease-out forwards',
         'glow-pulse': 'glow-pulse 2.5s ease-in-out infinite',
         'count-up': 'count-up 0.8s ease-out forwards',
