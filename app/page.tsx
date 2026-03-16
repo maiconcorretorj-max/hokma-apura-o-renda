@@ -544,7 +544,10 @@ export default function HokmaLanding() {
         <p className="text-center font-mono text-xs tracking-widest uppercase text-zinc-600 mb-8">Formatos Mapeados Natos</p>
         <div className="absolute left-0 inset-y-0 w-40 z-10 bg-gradient-to-r from-bg-deep to-transparent pointer-events-none" />
         <div className="absolute right-0 inset-y-0 w-40 z-10 bg-gradient-to-l from-bg-deep to-transparent pointer-events-none" />
-        <div className="flex w-max items-center animate-scroll-slow opacity-40 hover:opacity-100 transition-opacity duration-500">
+        <div 
+          className="flex w-max items-center animate-scroll opacity-40 hover:opacity-100 transition-opacity"
+          style={{ animationDuration: '120s' }}
+        >
           {[1, 2].map((i) => (
             <div key={i} className="flex gap-24 items-center px-12 shrink-0">
               <span className="font-bold text-3xl shrink-0 text-[#00B1EA]">Mercado Pago</span>
