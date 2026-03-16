@@ -208,10 +208,10 @@ function CanvasScrollHero({ images }: { images: HTMLImageElement[] }) {
             
             {/* 1st State */}
             <div
-              className="absolute top-[55%] md:top-[52%] -translate-y-1/2 max-w-3xl transform transition-all ease-out duration-100 origin-left"
+              className="absolute top-[54%] md:top-[52%] -translate-y-1/2 max-w-3xl transform transition-all ease-out duration-100 origin-left"
               style={t1Style}
             >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brand-blue/30 bg-brand-blue/10 text-brand-light font-mono text-xs tracking-widest mb-6 backdrop-blur-sm -mt-10">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brand-blue/30 bg-brand-blue/10 text-brand-light font-mono text-xs tracking-widest mb-4 backdrop-blur-sm">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-blue" />
@@ -219,23 +219,27 @@ function CanvasScrollHero({ images }: { images: HTMLImageElement[] }) {
                 Motor v3.0 · Determinístico
               </div>
 
-              <h1 className="text-6xl md:text-7xl lg:text-[6rem] font-black tracking-tighter leading-[1.05] text-white mb-6 drop-shadow-2xl">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] font-black tracking-tighter leading-[1.05] text-white mb-5 drop-shadow-2xl">
                 Automatize sua apuração de forma confiável.
               </h1>
 
-              <div className="bg-black/20 backdrop-blur-[2px] rounded-2xl p-2 -ml-2 mb-10 max-w-xl">
-                <p className="text-lg md:text-xl text-zinc-300 font-light leading-relaxed">
+              <div className="bg-black/20 backdrop-blur-[2px] rounded-2xl p-2 -ml-2 mb-8 max-w-xl">
+                <p className="text-base sm:text-lg text-zinc-300 font-light leading-relaxed">
                   A plataforma definitiva para auditores e correspondentes jurídicos. <strong className="text-white font-medium">Precisão de 99.9%</strong>. Nenhuma IA adivinhando números.
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
-                <a href="#pricing" className="group flex items-center justify-center gap-2 px-8 py-4 text-base font-bold bg-white text-black rounded-full shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all hover:-translate-y-1 w-full sm:w-auto">
+                <a href="#pricing" className="group flex items-center justify-center gap-3 px-8 py-4 text-base font-bold bg-white text-black rounded-full shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all hover:-translate-y-1 w-full sm:w-auto">
                   Iniciar Teste de 7 Dias
-                  <ArrowRight className="group-hover:translate-x-1 transition-transform w-5 h-5" />
+                  <ArrowRight className="group-hover:translate-x-1 transition-transform w-5 h-5 shrink-0" />
                 </a>
-                <div className="flex items-center gap-3 px-6 py-3.5 sm:py-0 bg-black/40 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none rounded-full sm:rounded-none border border-white/5 sm:border-none text-sm font-mono text-zinc-400 mt-2 sm:mt-0 h-full">
-                  <Menu className="animate-bounce text-zinc-500 w-4 h-4" /> Role para processar
+                <div className="flex items-center gap-3 px-6 py-4 sm:py-0 bg-black/40 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none rounded-full sm:rounded-none border border-white/5 sm:border-none text-sm font-mono text-zinc-400 sm:mt-0 h-full">
+                  <span className="relative flex h-3 w-3 items-center justify-center shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-zinc-400 opacity-30"></span>
+                    <Menu className="text-zinc-500 w-4 h-4 animate-bounce" />
+                  </span>
+                  Role para processar
                 </div>
               </div>
             </div>
@@ -292,39 +296,43 @@ function NavBar({ isLoggedIn, onCTA, menuOpen, setMenuOpen }: {
   return (
     <header className={cn(
       'fixed top-0 z-50 w-full transition-all duration-500',
-      scrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/10 py-4 shadow-2xl shadow-black/70' : 'bg-transparent py-6'
+      scrolled ? 'bg-bg-deep/90 backdrop-blur-xl border-b border-white/10 py-5 shadow-2xl' : 'bg-transparent py-8'
     )}>
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between relative z-10">
-        <Link href="/" className="flex items-center gap-3 group relative z-10">
-          <div className="w-9 h-9 bg-brand-blue transform rotate-45 flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.4)] group-hover:bg-brand-light transition-colors duration-300">
-            <Hexagon className="text-white fill-white -rotate-45 w-4 h-4" />
-          </div>
-          <span className="font-black text-xl tracking-tighter text-white">HOKMA</span>
-        </Link>
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between relative z-10 w-full">
+        {/* Logo - Force left */}
+        <div className="flex-1 flex justify-start">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 bg-brand-blue transform rotate-45 flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.4)] group-hover:bg-brand-light transition-colors duration-300">
+              <Hexagon className="text-white fill-white -rotate-45 w-5 h-5" />
+            </div>
+            <span className="font-black text-2xl tracking-tighter text-white">HOKMA</span>
+          </Link>
+        </div>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8 bg-brand-blue/30 backdrop-blur-xl px-8 py-3 rounded-full border border-blue-400/20 shadow-[0_0_30px_rgba(37,99,235,0.2)]">
+        {/* Desktop Nav - Absolute Center */}
+        <nav className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-8 bg-brand-blue/20 backdrop-blur-2xl px-10 py-3.5 rounded-full border border-blue-400/20 shadow-[0_0_30px_rgba(37,99,235,0.15)]">
           {[['#problema','O Problema'],['#solucao','Motor OCR'],['#features','Vantagens'],['#pricing','Planos']].map(([h,l]) => (
-            <a key={h} href={h} className="text-sm font-medium text-blue-100 hover:text-white transition-colors">{l}</a>
+            <a key={h} href={h} className="text-sm font-semibold text-blue-50 hover:text-white hover:scale-105 transition-all">{l}</a>
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-4 relative z-10">
+        {/* CTA - Force Right */}
+        <div className="hidden md:flex flex-1 justify-end items-center gap-5">
           {isLoggedIn ? (
-            <button onClick={onCTA} className="flex items-center gap-2 px-6 py-2.5 bg-brand-blue hover:bg-brand-light text-white font-bold rounded-full shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all hover:-translate-y-0.5">
+            <button onClick={onCTA} className="flex items-center gap-2 px-7 py-3 bg-brand-blue hover:bg-brand-light text-white font-bold rounded-full shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all hover:scale-105">
               Dashboard <ArrowRight className="h-4 w-4" />
             </button>
           ) : (
             <>
-              <Link href="/login" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors px-4">Login</Link>
-              <a href="#pricing" className="flex items-center gap-2 px-6 py-2.5 bg-brand-blue hover:bg-brand-light text-white font-bold rounded-full shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all hover:-translate-y-0.5">
+              <Link href="/login" className="text-sm font-semibold text-zinc-300 hover:text-white transition-colors px-2">Login</Link>
+              <a href="#pricing" className="flex items-center gap-2 px-7 py-3 bg-brand-blue hover:bg-brand-light text-white font-bold rounded-full shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all hover:scale-105">
                 Testar Grátis <ChevronRight className="h-4 w-4" />
               </a>
             </>
           )}
         </div>
 
-        <button className="md:hidden text-white relative z-10" onClick={() => setMenuOpen(!menuOpen)}>
+        <button className="lg:hidden text-white relative z-10" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
