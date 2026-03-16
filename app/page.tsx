@@ -540,29 +540,29 @@ export default function HokmaLanding() {
       </section>
 
       {/* ── BANCO MARQUEE ─────────────────────────────────────────────── */}
-      <div className="py-12 border-b border-white/5 bg-bg-deep overflow-hidden relative">
+      <div className="py-12 border-b border-white/5 bg-bg-deep overflow-hidden relative" style={{ '--tw-duration': '40s' } as React.CSSProperties}>
         <p className="text-center font-mono text-xs tracking-widest uppercase text-zinc-600 mb-8">Formatos Mapeados Natos</p>
         <div className="absolute left-0 inset-y-0 w-32 z-10 bg-gradient-to-r from-bg-deep to-transparent pointer-events-none" />
         <div className="absolute right-0 inset-y-0 w-32 z-10 bg-gradient-to-l from-bg-deep to-transparent pointer-events-none" />
-        <div className="flex items-center animate-scroll whitespace-nowrap w-[200%] opacity-40 hover:opacity-100 transition-opacity duration-500">
-          <div className="flex gap-16 items-center px-8 w-1/2 justify-around">
-            <span className="font-bold text-2xl" style={{ color: '#8A05BE' }}>Nubank</span>
-            <span className="font-bold text-2xl" style={{ color: '#EC7000' }}>Itaú</span>
-            <span className="font-bold text-2xl" style={{ color: '#CC092F' }}>Bradesco</span>
-            <span className="font-bold text-2xl" style={{ color: '#F39200' }}>CAIXA</span>
-            <span className="font-bold text-2xl" style={{ color: '#FF7A00' }}>Inter</span>
-            <span className="font-bold text-2xl" style={{ color: '#00E5FF' }}>Neon</span>
-            <span className="font-bold text-2xl text-white">C6 Bank</span>
-          </div>
-          <div className="flex gap-16 items-center px-8 w-1/2 justify-around">
-            <span className="font-bold text-2xl" style={{ color: '#8A05BE' }}>Nubank</span>
-            <span className="font-bold text-2xl" style={{ color: '#EC7000' }}>Itaú</span>
-            <span className="font-bold text-2xl" style={{ color: '#CC092F' }}>Bradesco</span>
-            <span className="font-bold text-2xl" style={{ color: '#F39200' }}>CAIXA</span>
-            <span className="font-bold text-2xl" style={{ color: '#FF7A00' }}>Inter</span>
-            <span className="font-bold text-2xl" style={{ color: '#00E5FF' }}>Neon</span>
-            <span className="font-bold text-2xl text-white">C6 Bank</span>
-          </div>
+        <div className="flex items-center animate-[scroll_40s_linear_infinite] whitespace-nowrap w-[400%] opacity-40 hover:opacity-100 transition-opacity duration-500">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex gap-16 items-center px-8 w-1/4 justify-around">
+              <span className="font-bold text-2xl text-[#00B1EA]">Mercado Pago</span>
+              <span className="font-bold text-2xl text-[#FF7A00]">Inter</span>
+              <span className="font-bold text-2xl text-[#8A05BE]">Nubank</span>
+              <span className="font-bold text-2xl text-[#00E5FF]">Neon</span>
+              <span className="font-bold text-2xl text-[#1FB141]">PagBank</span>
+              <span className="font-bold text-2xl text-[#F39200]">CAIXA Econômica</span>
+              <span className="font-bold text-2xl text-[#CC092F]">Bradesco</span>
+              <span className="font-bold text-2xl text-[#FCEB00] drop-shadow-md">Banco do Brasil</span>
+              <span className="font-bold text-2xl text-[#EC7000]">Itaú</span>
+              <span className="font-bold text-2xl text-[#EC0000]">Santander</span>
+              <span className="font-bold text-2xl text-[#11C76F]">PicPay</span>
+              <span className="font-bold text-2xl text-white">InfinitePay</span>
+              <span className="font-bold text-2xl text-[#00FF5E]">Next</span>
+              <span className="font-bold text-2xl text-white">C6 Bank</span>
+            </div>
+          ))}
         </div>
       </div>
 
