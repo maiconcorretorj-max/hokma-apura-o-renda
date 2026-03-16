@@ -27,7 +27,6 @@ function LoadingScreen({ onComplete }: { onComplete: (images: HTMLImageElement[]
     let count = 0;
     for (let i = 1; i <= TOTAL_FRAMES; i++) {
       const img = new Image();
-      img.crossOrigin = "anonymous";
       const frameNum = String(i).padStart(4, '0');
       img.src = `${S3_BASE_URL}${frameNum}.jpg`;
 
